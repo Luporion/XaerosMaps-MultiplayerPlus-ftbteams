@@ -1,6 +1,7 @@
 plugins {
     id("com.gradleup.shadow")
     kotlin("jvm")
+    kotlin("plugin.serialization")
     application
 }
 

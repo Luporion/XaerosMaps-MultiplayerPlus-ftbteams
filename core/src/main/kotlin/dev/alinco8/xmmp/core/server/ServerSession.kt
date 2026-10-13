@@ -37,14 +37,13 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 
 class ServerSession(
-    configFile: File,
+    private val serverConfig: ServerConfig,
     private val worldDataDir: Path,
     val host: ServerHost,
     val standalone: Boolean = false,
 ) : AutoCloseable {
     val handlers = ServerPacketHandlers(this)
 
-    private val serverConfig = ServerConfig.fromToml(configFile)
     private val pool = FileChannelPool(64)
 
     private val dispatcher = TickDispatcher()

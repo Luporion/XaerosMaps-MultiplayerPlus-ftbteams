@@ -2,6 +2,8 @@ package dev.alinco8.xmmp.server
 
 import dev.alinco8.xmmp.XMMP
 import dev.alinco8.xmmp.common.ServerEvents
+import dev.alinco8.xmmp.core.config.ConfigIO
+import dev.alinco8.xmmp.core.config.ServerConfig
 import dev.alinco8.xmmp.core.server.ServerSession
 import dev.alinco8.xmmp.utils.ModPaths
 import net.minecraft.server.MinecraftServer
@@ -29,7 +31,11 @@ object XMMPServer {
         check(session == null) { "Session should be null when server starts" }
 
         session = ServerSession(
-            ModPaths.configDir().resolve("${XMMP.MOD_ID}-server.toml").toFile(),
+            ConfigIO.loadOrInit(
+                ModPaths.configDir().resolve("${XMMP.MOD_ID}-server.toml").toFile()
+            ) {
+                ServerConfig()
+            },
             server.getWorldPath(LevelResource("xmmp")),
             ServerHostImpl(server),
         )

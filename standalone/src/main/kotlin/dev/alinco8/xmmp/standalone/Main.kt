@@ -1,7 +1,10 @@
 package dev.alinco8.xmmp.standalone
 
+import com.akuleshov7.ktoml.Toml
 import dev.alinco8.xmmp.core.LOGGER
+import dev.alinco8.xmmp.core.config.ServerConfig
 import dev.alinco8.xmmp.core.server.ServerSession
+import dev.alinco8.xmmp.standalone.config.StandaloneConfig
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.MultiThreadIoEventLoopGroup
@@ -13,11 +16,35 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.Path
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 
 
 fun main() {
     val root = Path("run").toAbsolutePath()
-    val port = System.getenv("STANDALONE_PORT")?.toIntOrNull() ?: 25580
+
+    LOGGER.info("Starting standalone server in $root")
+
+    val configFile = root.resolve("config.toml").toFile()
+    val serverConfig: ServerConfig
+    val standaloneConfig: StandaloneConfig
+    try {
+        if (configFile.exists()) {
+            serverConfig = Toml.decodeFromString<ServerConfig>(configFile.readText())
+            standaloneConfig = Toml.decodeFromString<StandaloneConfig>(configFile.readText())
+        } else {
+            serverConfig = ServerConfig()
+            standaloneConfig = StandaloneConfig()
+
+            configFile.parentFile.mkdirs()
+            configFile.writeText(
+                Toml.encodeToString(standaloneConfig) + "\n" + Toml.encodeToString(serverConfig)
+            )
+        }
+    } catch (e: Exception) {
+        LOGGER.error("Failed to load configuration", e)
+        return
+    }
 
     val stopping = AtomicBoolean(false)
     val shutdownLock = Any()
@@ -25,12 +52,10 @@ fun main() {
     val group = MultiThreadIoEventLoopGroup(NioIoHandler.newFactory())
     val executor = ScheduledThreadPoolExecutor(1)
 
-    LOGGER.info("Starting standalone server in $root")
-
     val host = StandaloneServerHost()
     val session = try {
         ServerSession(
-            root.resolve("config.toml").toFile(),
+            serverConfig,
             root.resolve("data"),
             host,
             standalone = true
@@ -71,6 +96,8 @@ fun main() {
 
     val hook = Thread({ shutdown() }, "xmmp-shutdown")
     Runtime.getRuntime().addShutdownHook(hook)
+
+    val port = standaloneConfig.port
 
     try {
         val channel = ServerBootstrap()

@@ -3,6 +3,8 @@ package dev.alinco8.xmmp.plugin
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
 import dev.alinco8.xmmp.core.ResourceId
 import dev.alinco8.xmmp.core.common.ServerHost
+import dev.alinco8.xmmp.core.config.ConfigIO
+import dev.alinco8.xmmp.core.config.ServerConfig
 import dev.alinco8.xmmp.core.network.XMMPPacket
 import dev.alinco8.xmmp.core.network.readByteArray
 import dev.alinco8.xmmp.core.network.writeByteArray
@@ -33,7 +35,9 @@ class XMMPPlugin : JavaPlugin(), ServerHost {
     override fun onEnable() {
         check(session == null) { "Session should be null when server starts" }
         session = ServerSession(
-            dataFolder.resolve("xmmp-server.toml"),
+            ConfigIO.loadOrInit(dataFolder.resolve("xmmp-server.toml")) {
+                ServerConfig()
+            },
             dataFolder.resolve("xmmp").toPath(),
             this,
         )
