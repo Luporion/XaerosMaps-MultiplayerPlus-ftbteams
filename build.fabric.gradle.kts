@@ -29,12 +29,19 @@ dependencies {
 
     modImplementation("com.terraformersmc:modmenu:${prop("deps.modmenu.version")}")
 
-    include(implementation("dev.alinco8.xmmp:core")!!)
-    include(implementation("com.github.luben:zstd-jni:${prop("libs.zstd")}")!!)
+    include("dev.alinco8.xmmp:core")
+    implementation("dev.alinco8.xmmp:core")
 
-    include(implementation("com.electronwill.night-config:toml:${prop("libs.night_config")}")!!)
-    include(implementation("com.electronwill.night-config:core:${prop("libs.night_config")}")!!)
-    include(runtimeOnly("com.akuleshov7:ktoml-core:0.7.1")!!)
+    include(libs.zstd.jni)
+    implementation(libs.zstd.jni)
+
+    include(libs.night.config.core)
+    implementation(libs.night.config.core)
+    include(libs.night.config.toml)
+    implementation(libs.night.config.toml)
+
+    include(libs.ktoml.core.jvm)
+    runtimeOnly(libs.ktoml.core.jvm)
 
     listOf("spark", "sodium", "ferrite-core", "modern-fix", "lithium").forEach {
         try {

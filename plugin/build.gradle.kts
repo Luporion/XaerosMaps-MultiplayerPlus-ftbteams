@@ -30,7 +30,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:${prop("plugin.deps.paper_api")}")
 
     implementation("dev.alinco8.xmmp:core")
-    compileOnly("io.netty:netty-buffer:4.2.18.Final")
+    compileOnly(libs.netty.buffer)
 }
 
 tasks {

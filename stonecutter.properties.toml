@@ -17,12 +17,6 @@ neoforge_updates = "https://api.modrinth.com/updates/stTaMuWa/forge_updates.json
 modrinth.id = "stTaMuWa"
 curseforge.id = 1525919
 
-[libs]
-# renovate: datasource=maven depName=com.electronwill.night-config:toml
-night_config = "3.9.0"
-# renovate: datasource=maven depName=com.github.luben:zstd-jni
-zstd = "1.5.7-23"
-
 [deps]
 # renovate: datasource=maven depName=xaero.minimap:xaerominimap-fabric-1.20.1 registryUrl=https://chocolateminecraft.com/maven
 xaero_minimap = { version = "26.6.0", range = ["25"] }

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+
 plugins {
     alias(libs.plugins.kotlin)
     alias(libs.plugins.kotlin.serialization)
@@ -13,7 +15,7 @@ repositories {
 dependencies {
     compileOnly(kotlin("stdlib"))
     compileOnly(libs.kotlinx.coroutines.core)
-    compileOnly(libs.ktoml.core)
+    compileOnly(libs.ktoml.core.jvm)
 
     compileOnly(libs.netty.buffer)
     compileOnly(libs.fastutil)
@@ -29,4 +31,7 @@ java {
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        apiVersion = KotlinVersion.KOTLIN_2_2
+    }
 }

@@ -77,16 +77,18 @@ configurations {
 dependencies {
     implementation("thedarkcolour:kotlinforforge-neoforge:${prop("deps.kff.version")}")
 
-    jarJar(implementation("dev.alinco8.xmmp:core")!!)
+    jarJar("dev.alinco8.xmmp:core")
+    implementation("dev.alinco8.xmmp:core")
 
-    jarJar(implementation("com.github.luben:zstd-jni:${prop("libs.zstd")}")!!)
-    if (stonecutter.eval(minecraft, "<=1.21.8")) {
-        add("additionalRuntimeClasspath", "com.github.luben:zstd-jni:${prop("libs.zstd")}")
-    }
+    jarJar(libs.zstd.jni)
+    implementation(libs.zstd.jni)
+    if (stonecutter.eval(minecraft, "<=1.21.8"))
+        add("additionalRuntimeClasspath", libs.zstd.jni)
 
-    jarJar(runtimeOnly("com.akuleshov7:ktoml-core-jvm:0.7.1")!!)
+    jarJar(libs.ktoml.core.jvm)
+    runtimeOnly(libs.ktoml.core.jvm)
 
-    compileOnly("com.electronwill.night-config:toml:${prop("libs.night_config")}")
+    compileOnly(libs.night.config.toml)
 
     listOf(
         "sodium",

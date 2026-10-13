@@ -5,6 +5,7 @@ import buildlogic.propOrNull
 import buildlogic.propList
 import buildlogic.strictExpand
 import buildlogic.strictMaven
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     kotlin("jvm")
@@ -102,6 +103,9 @@ java {
 
 kotlin {
     jvmToolchain(prop("deps.java.version").toInt())
+    compilerOptions {
+        apiVersion = KotlinVersion.KOTLIN_2_2
+    }
 }
 
 tasks {

@@ -18,7 +18,7 @@
     {
       "groupName": "kotlin",
       "matchPackageNames": [
-        "org.jetbrains.kotlin**",
+        "/^org\\.jetbrains\\.kotlin[:.]/",
         "com.google.devtools.ksp**"
       ]
     },
@@ -41,7 +41,14 @@
     },
     {
       "matchPackageNames": [
-        "org.spongepowered:mixin"
+        "org.spongepowered:mixin",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+        "com.electronwill.night-config:core",
+        "com.electronwill.night-config:toml",
+        "io.netty:netty-buffer",
+        "it.unimi.dsi:fastutil",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ],
       "enabled": false
     }

@@ -72,16 +72,19 @@ legacyForge {
 dependencies {
     modImplementation("thedarkcolour:kotlinforforge:${prop("deps.kff.version")}")
     implementation("thedarkcolour:kfflib:${prop("deps.kff.version")}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    implementation(libs.kotlinx.coroutines.core)
 
-    jarJar(implementation("dev.alinco8.xmmp:core")!!)
+    jarJar("dev.alinco8.xmmp:core")
+    implementation("dev.alinco8.xmmp:core")
 
-    jarJar(implementation("com.github.luben:zstd-jni:${prop("libs.zstd")}")!!)
-    add("additionalRuntimeClasspath", "com.github.luben:zstd-jni:${prop("libs.zstd")}")
+    jarJar(libs.zstd.jni)
+    implementation(libs.zstd.jni)
+    add("additionalRuntimeClasspath", libs.zstd.jni)
 
-    jarJar(runtimeOnly("com.akuleshov7:ktoml-core-jvm:0.7.1")!!)
+    jarJar(libs.ktoml.core.jvm)
+    runtimeOnly(libs.ktoml.core.jvm)
 
-    compileOnly("com.electronwill.night-config:toml:${prop("libs.night_config")}")
+    compileOnly(libs.night.config.toml)
 
     annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
 
