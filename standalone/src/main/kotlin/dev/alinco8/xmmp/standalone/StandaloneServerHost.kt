@@ -1,6 +1,5 @@
 package dev.alinco8.xmmp.standalone
 
-import dev.alinco8.xmmp.core.LOGGER
 import dev.alinco8.xmmp.core.ResourceId
 import dev.alinco8.xmmp.core.common.ServerHost
 import dev.alinco8.xmmp.core.network.XMMPPacket
@@ -19,20 +18,14 @@ class StandaloneServerHost : ServerHost {
     private val connections = ConcurrentHashMap<UUID, Connection>()
 
     fun register(playerId: UUID, ch: Channel) {
-        LOGGER.info("Registering connection: {}", playerId)
-
         connections[playerId] = Connection(ch)
     }
 
     fun unregister(playerId: UUID) {
-        LOGGER.info("Unregistering connection: {}", playerId)
-
         connections.remove(playerId)
     }
 
     override fun onDimensionChanged(playerId: UUID, dimension: ResourceId) {
-        LOGGER.info("Player {} changed dimension to {}", playerId, dimension)
-
         connections[playerId]?.dimension = dimension
     }
 
@@ -40,12 +33,16 @@ class StandaloneServerHost : ServerHost {
         playerId: UUID,
         packet: T,
     ): Boolean {
-        LOGGER.info("Sending packet {} to player {}", packet.type.id, playerId)
-
         val ch = connections[playerId] ?: return false
+
         val frame = ch.channel.alloc().buffer()
-        frame.writeId(packet.type.id)
-        packet.type.codec.encode(frame, packet)
+        try {
+            frame.writeId(packet.type.id)
+            packet.type.codec.encode(frame, packet)
+        } catch (e: Exception) {
+            frame.release()
+            throw e
+        }
 
         ch.channel.writeAndFlush(frame)
             .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE)
@@ -60,8 +57,6 @@ class StandaloneServerHost : ServerHost {
     override fun getDimension(playerId: UUID) = connections[playerId]?.dimension
 
     override fun disconnectPlayer(playerId: UUID, reason: String) {
-        LOGGER.info("Disconnecting player {}: {}", playerId, reason)
-
         connections.remove(playerId)?.channel?.close()
     }
 }

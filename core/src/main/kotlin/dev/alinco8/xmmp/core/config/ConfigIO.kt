@@ -8,7 +8,10 @@ import kotlinx.serialization.encodeToString
 
 object ConfigIO {
     inline fun <reified T> load(string: String) = Toml.decodeFromString<T>(string)
-    inline fun <reified T> save(file: File, config: T) = file.writeText(Toml.encodeToString(config))
+    inline fun <reified T> save(file: File, config: T) {
+        file.parentFile.mkdirs()
+        file.writeText(Toml.encodeToString(config))
+    }
 
     inline fun <reified T> loadOrInit(file: File, default: () -> T) = try {
         if (file.exists()) {
@@ -21,9 +24,15 @@ object ConfigIO {
         }
     } catch (e: Exception) {
         LOGGER.error(
-            "Failed to load config from ${file.absolutePath}, reinitializing with default config",
+            "Failed to load config from ${file.absolutePath}, backing up and creating a new one",
             e
         )
+
+        try {
+            file.copyTo(File(file.absolutePath + ".bak"), overwrite = true)
+        } catch (e: Exception) {
+            LOGGER.error("Failed to backup config file ${file.absolutePath}", e)
+        }
 
         val config = default()
         save(file, config)
