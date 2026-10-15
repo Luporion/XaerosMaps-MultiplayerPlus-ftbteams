@@ -37,6 +37,17 @@ class FabricEntrypoint : ModInitializer, ServerEvents {
                 FramePacket.payloadType,
                 StreamCodec.of(FramePacket.CODEC::encode, FramePacket.CODEC::decode)
             )
+
+        PayloadTypeRegistry
+            //? if >=26 {
+            /*.clientboundPlay()
+            *///? } else {
+            .playS2C()
+            //? }
+            .register(
+                FramePacket.payloadType,
+                StreamCodec.of(FramePacket.CODEC::encode, FramePacket.CODEC::decode)
+            )
         //? }
 
         //? if >=1.20.5 {
