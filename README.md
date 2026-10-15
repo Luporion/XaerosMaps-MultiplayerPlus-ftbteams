@@ -6,46 +6,75 @@
 
 ## 🗺️ Overview
 
-This mod extends the multiplayer features of Xaero's World Map and Xaero's Minimap.
+This mod extends the multiplayer features of Xaero's World Map and Minimap
 
 ## 🤔 F.A.Q.
 
 ### The cave layer feature on the World Map doesn't work!
 
-When cave map syncing is enabled (it is by default), the layer feature is disabled on the World Map
-only. The Minimap is not affected. If you want the World Map layer feature back, you'll have to give
-up cave syncing: set `syncCaves` to `false` in `config/xmmp-server.toml`.
+This happens when the mod's cave map syncing is enabled (it is by default). While it's on, Xaero's
+World Map cave layers are disabled. The Minimap isn't affected. If you want the World Map cave
+layers back, you'll have to give up cave syncing: set `syncCaves` to `false` in
+`config/xmmp-server.toml`
 
 ## 🚀 Features
 
 ### World map syncing with other players
 
-(Player icons are a built-in feature of Xaero's Minimap! Set `everyone_tracks_everyone` to `true`
-in `config/xaero/lib/common.cfg`)
+(Player icons are a built-in Xaero's Minimap feature. Set `everyone_tracks_everyone` to `true` in
+`config/xaero/lib/common.cfg`)
 
-![output.webp](https://github.com/alinco8/XaerosMaps-MultiplayerPlus/blob/main/assets/features/world_map_syncing.webp?raw=true)
+![world_map_syncing.webp](https://github.com/alinco8/XaerosMaps-MultiplayerPlus/blob/main/assets/features/world_map_syncing.webp?raw=true)
+
+### Plugin support
+
+If you can't run mods on your server, you can still sync maps using a plugin:
+
+1. Download xmmp-plugin.jar from the
+   [latest GitHub Release](https://github.com/alinco8/XaerosMaps-MultiplayerPlus/releases/latest)
+2. Put it in the server's plugins folder
+
+### Standalone mode
+
+If you can't install mods or plugins, or the server isn't yours, you can use standalone mode.
+
+Host setup:
+
+1. Download xmmp-standalone.jar from the
+   [latest GitHub Release](https://github.com/alinco8/XaerosMaps-MultiplayerPlus/releases/latest)
+2. Move it to a suitable folder (it creates a run folder, so I'd avoid running it straight from
+   your Downloads folder)
+3. Start it with something like `java -jar <downloaded file name>` (explaining how to run a jar is
+   out of scope here, so please look it up)
+4. Open the port (default 25580) and share your IP and port with everyone else
+
+Player setup (host included):
+
+1. Join the world
+2. Go to Mods menu → Xaero's Maps: Multiplayer+ → World Specific → Server Address and enter the
+   server's IP and port (this won't show up until you've joined a world)
+3. Rejoin the world
 
 ### Planned
 
-- Server-side map generation (accurate and safe, can generate areas that haven't been loaded yet)
-- Connect to an external server (non-Minecraft) and sync your map with it (use cases: you are not
-  hosting the server, but want to sync your map with your friends)
+- Make the Xaero's World Map / Minimap features that require a server work with standalone / plugin
+  too (e.g. player icons on the map)
+- Server-side map generation (accurate and safe, and can generate areas that haven't been loaded
+  yet)
 - Waypoint set sync (additions/deletions automatically synced between players)
 - Direct waypoint sharing (via in-game chat, or copy-paste for sharing outside Minecraft)
-- Server-managed waypoint sets (waypoints controlled by the server)
+- Server-managed waypoint sets
 
 Suggestions for other features are very welcome!
 
 ## ⚙️ Configuration
 
-Many of this mod's settings can be customized, especially options that affect server load.
-
-You can change them either through the in-game settings screen powered by YACL, or by editing the
-config file directly.
+Many of this mod's settings can be customized. You can change them in the in-game settings screen
+(powered by YACL) or by editing the config file directly
 
 ## 🫶 Support
 
-Like the mod? You can support its development by getting a server through the banner below or by
-donating on [Ko-fi](https://ko-fi.com/alinco8)!
+If you enjoy the mod, you can support its development by getting a server through the banner below
+or by donating on [Ko-fi](https://ko-fi.com/alinco8)!
 
 [![BisectHosting](https://www.bisecthosting.com/partners/custom-banners/46b5e2aa-795e-4034-b94d-2247b5b3c7bf.webp)](https://short.alinco8.dev/bh)
