@@ -22,6 +22,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@0c2d7a00afc5de6d5d2d5fc44922d2f6f993dda2 # main
       - run: cargo-binstall --no-confirm git-cliff
       - id: check-version
+        name: Check version and generate release notes
         #language=bash
         run: |
           current_version=$(sed -nE 's/^version[[:space:]]*=[[:space:]]*//p' gradle.properties | tr -d '[:space:]')
@@ -158,6 +159,8 @@ jobs:
           name: tools
           path: ${{ github.workspace }}/build/tools
       - if: env.PRERELEASE == 'false'
+        name: Commit and push version bump
+        #language=bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -172,11 +175,19 @@ jobs:
           PREBUILT_DIR: ${{ github.workspace }}/build/libs
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-      - run: |
+      - name: Create GitHub Release
+        #language=bash
+        run: |
           args=()
           if [ "$PRERELEASE" = "true" ]; then
             args+=(--prerelease --target "$GITHUB_SHA")
           fi
+          
+          echo "Creating GitHub release v$VERSION with:"
+          echo "  prerelease: $PRERELEASE"
+          echo "  items: build/libs/*, build/tools/plugin/build/libs/*.jar, build/tools/standalone/build/libs/*.jar"
+          echo "  release notes: $RELEASE_NOTES"
+          echo "  additional args: ${args[*]}"
 
           gh release create "v$VERSION" \
             --title "v$VERSION" \
