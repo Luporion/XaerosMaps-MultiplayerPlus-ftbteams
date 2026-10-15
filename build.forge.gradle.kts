@@ -4,20 +4,23 @@ import buildlogic.ifProp
 import buildlogic.prop
 import buildlogic.propOrNull
 import buildlogic.strictMaven
-import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.jetbrains.gradle.ext.ProjectSettings
-import org.jetbrains.gradle.ext.RunConfigurationContainer
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.slf4j.event.Level
 
 plugins {
-    id("net.neoforged.moddev.legacyforge") version "2.0.148"
+    id("net.neoforged.moddev.legacyforge")
     id("dev.kikugie.fletching-table.lexforge")
     id("me.modmuss50.mod-publish-plugin")
+    id("com.gradleup.shadow")
     id("project.common")
 }
 
 val minecraft = extra["minecraft"] as String
 val loader = extra["loader"] as String
+
+val shade = configurations.create("shade") {
+    isTransitive = false
+}
 
 repositories {
     strictMaven(
@@ -81,10 +84,10 @@ dependencies {
     implementation(libs.zstd.jni)
     add("additionalRuntimeClasspath", libs.zstd.jni)
 
-    jarJar(libs.kotlinx.datetime.jvm)
+    shade(libs.kotlinx.datetime.jvm)
     runtimeOnly(libs.kotlinx.datetime.jvm)
 
-    jarJar(libs.ktoml.core.jvm)
+    shade(libs.ktoml.core.jvm)
     runtimeOnly(libs.ktoml.core.jvm)
 
     compileOnly(libs.night.config.toml)
@@ -115,6 +118,17 @@ dependencies {
     }
 }
 
+val shadeLibs = tasks.register<ShadowJar>("shadeLibs") {
+    configurations = listOf(shade)
+    archiveClassifier = "shaded-libs"
+    destinationDirectory = layout.buildDirectory.dir("tmp/shadeLibs")
+
+    relocate("kotlinx.datetime", "dev.alinco8.xmmp.shadow.kotlinx.datetime")
+
+    exclude("module-info.class", "META-INF/versions/**/module-info.class")
+    exclude("META-INF/*.kotlin_module", "META-INF/maven/**")
+}
+
 mixin {
     add(sourceSets.main.get(), "${prop("mod.id")}.refmap.json")
 }
@@ -128,7 +142,17 @@ tasks {
     named<ProcessResources>("processResources") {
         exclude("fabric.mod.json5", "META-INF/neoforge.mods.toml")
     }
+
+    shadowJar {
+        enabled = false
+    }
+
     named<Jar>("jar") {
+        dependsOn(shadeLibs)
+        from(shadeLibs.map { zipTree(it.archiveFile) }) {
+            exclude("META-INF/MANIFEST.MF")
+        }
+
         manifest {
             attributes(
                 "MixinConfigs" to "${prop("mod.id")}.mixins.json"

@@ -10,7 +10,7 @@ import org.jetbrains.gradle.ext.RunConfigurationContainer
 import org.slf4j.event.Level
 
 plugins {
-    id("net.neoforged.moddev") version "2.0.148"
+    id("net.neoforged.moddev")
     id("dev.kikugie.fletching-table.neoforge")
     id("me.modmuss50.mod-publish-plugin")
     id("project.common")

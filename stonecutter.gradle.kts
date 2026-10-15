@@ -1,4 +1,5 @@
 plugins {
+    id("net.neoforged.moddev") version "2.0.148" apply false
     id("dev.kikugie.stonecutter")
     id("project.base")
 }
