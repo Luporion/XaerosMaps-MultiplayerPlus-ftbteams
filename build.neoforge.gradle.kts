@@ -85,6 +85,9 @@ dependencies {
     if (stonecutter.eval(minecraft, "<=1.21.8"))
         add("additionalRuntimeClasspath", libs.zstd.jni)
 
+    jarJar(libs.kotlinx.datetime.jvm)
+    runtimeOnly(libs.kotlinx.datetime.jvm)
+
     jarJar(libs.ktoml.core.jvm)
     runtimeOnly(libs.ktoml.core.jvm)
 

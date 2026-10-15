@@ -2,6 +2,7 @@
 kotlin = "2.4.21"
 kotlinx-coroutines = "1.10.2"
 ksp = "2.3.12"
+kotlinx-datetime = "0.7.1-0.6.x-compat"
 mod-publish = "2.2.1"
 fletching-table = "0.1.0-alpha.23"
 stonecutter = "0.9.8"
@@ -17,6 +18,7 @@ night-config = "3.6.4"
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-serialization-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-datetime-jvm = { module = "org.jetbrains.kotlinx:kotlinx-datetime-jvm", version.ref = "kotlinx-datetime" }
 ksp-gradle-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 mod-publish-gradle-plugin = { module = "me.modmuss50:mod-publish-plugin", version.ref = "mod-publish" }
 fletching-table = { module = "dev.kikugie:fletching-table", version.ref = "fletching-table" }

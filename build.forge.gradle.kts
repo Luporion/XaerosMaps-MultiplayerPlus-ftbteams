@@ -81,6 +81,9 @@ dependencies {
     implementation(libs.zstd.jni)
     add("additionalRuntimeClasspath", libs.zstd.jni)
 
+    jarJar(libs.kotlinx.datetime.jvm)
+    runtimeOnly(libs.kotlinx.datetime.jvm)
+
     jarJar(libs.ktoml.core.jvm)
     runtimeOnly(libs.ktoml.core.jvm)
 
