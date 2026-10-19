@@ -30,7 +30,7 @@ jobs:
               .versions[]
               | split(":") as $p
               | ($p[0] | split("-") | last) as $loader
-              | $p[1] as $mc
+              | ({ "1.20.5": "1.20.6" }[$p[1]] // $p[1]) as $mc
               | {
                   project: $p[0],
                   mc: $mc,
