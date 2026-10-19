@@ -35,7 +35,15 @@ class NeoForgeEntrypoint : ServerEvents {
         e.registrar(XMMP.PACKET_VERSION).optional().playBidirectional(
             FramePacket.payloadType,
             StreamCodec.of(FramePacket.CODEC::encode, FramePacket.CODEC::decode),
-            //? <1.21.8
+            //? if >=1.21.8 {
+            /*{ packet, ctx ->
+                XMMPServer.session?.handlers?.handle(
+                    packet.frame,
+                    ctx.player().uuid
+                )
+            },
+            { packet, _ -> ClientPacketHandlers.handle(Unpooled.wrappedBuffer(packet.frame)) },
+            *///? } else {
             DirectionalPayloadHandler(
                 { packet, _ -> ClientPacketHandlers.handle(Unpooled.wrappedBuffer(packet.frame)) },
                 { packet, ctx ->
@@ -43,9 +51,9 @@ class NeoForgeEntrypoint : ServerEvents {
                         packet.frame,
                         ctx.player().uuid
                     )
-                }
-                //? <1.21.8
+                },
             )
+            //? }
         )
     }
 
