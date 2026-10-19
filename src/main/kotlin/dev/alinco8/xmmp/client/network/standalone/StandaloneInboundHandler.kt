@@ -29,7 +29,7 @@ class StandaloneInboundHandler(
         ctx: ChannelHandlerContext,
         buf: ByteBuf,
     ) {
-        ClientPacketHandlers.handle(buf) {
+        ClientPacketHandlers.handle(buf, false) {
             XMMPClient.packetSender === sender && !sender.isClosed
         }
     }

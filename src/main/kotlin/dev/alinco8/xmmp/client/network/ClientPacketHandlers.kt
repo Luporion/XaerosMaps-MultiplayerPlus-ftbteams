@@ -4,6 +4,7 @@ import dev.alinco8.xmmp.XMMP.LOGGER
 import dev.alinco8.xmmp.client.ClientSession
 import dev.alinco8.xmmp.client.WorldContext
 import dev.alinco8.xmmp.client.XMMPClient
+import dev.alinco8.xmmp.client.network.minecraft.MinecraftPacketSender
 import dev.alinco8.xmmp.core.ResourceId
 import dev.alinco8.xmmp.core.network.XMMPPacket
 import dev.alinco8.xmmp.core.network.packet.S2CChunkData
@@ -34,7 +35,11 @@ object ClientPacketHandlers {
         }
     }
 
-    fun handle(buf: ByteBuf, isCurrentConnection: () -> Boolean = { true }) {
+    fun handle(
+        buf: ByteBuf,
+        fromMinecraft: Boolean = true,
+        isCurrentConnection: () -> Boolean = { true },
+    ) {
         val (handler, packet) = try {
             val id = buf.readId()
             val entry = packets[id] ?: run {
@@ -62,6 +67,15 @@ object ClientPacketHandlers {
 
         Minecraft.getInstance().execute {
             if (!isCurrentConnection()) return@execute
+            if (fromMinecraft) {
+                val current = XMMPClient.packetSender
+                if (current !is MinecraftPacketSender) {
+                    XMMPClient.session?.close()
+                    XMMPClient.session = null
+                    current?.close()
+                    XMMPClient.packetSender = MinecraftPacketSender()
+                }
+            }
 
             handler(packet)
         }
