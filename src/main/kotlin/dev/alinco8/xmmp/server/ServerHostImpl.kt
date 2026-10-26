@@ -5,6 +5,7 @@ import dev.alinco8.xmmp.core.network.XMMPPacket
 import dev.alinco8.xmmp.id
 import dev.alinco8.xmmp.io.TilePayloadCodec
 import dev.alinco8.xmmp.server.network.ServerPacketSender
+import dev.alinco8.xmmp.server.sharing.FtbTeamResolver
 import io.netty.buffer.Unpooled
 import java.util.UUID
 import net.minecraft.network.chat.Component
@@ -25,6 +26,8 @@ class ServerHostImpl(private val server: MinecraftServer) : ServerHost {
             false
         }
     }
+
+    override fun getPartyTeamId(playerId: UUID): UUID? = FtbTeamResolver.partyId(playerId)
 
     override fun listPlayers() = server.playerList.players.map { it.uuid }
 

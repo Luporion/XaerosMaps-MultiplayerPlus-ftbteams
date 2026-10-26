@@ -11,6 +11,8 @@ interface ServerHost {
     fun listPlayers(): List<UUID>
 
     fun getDimension(playerId: UUID): ResourceId?
+    /** The server, never the client, supplies FTB party membership. Nullable = no permission. */
+    fun getPartyTeamId(playerId: UUID): UUID? = null
     fun disconnectPlayer(playerId: UUID, reason: String)
 
     fun onDimensionChanged(playerId: UUID, dimension: ResourceId) {}

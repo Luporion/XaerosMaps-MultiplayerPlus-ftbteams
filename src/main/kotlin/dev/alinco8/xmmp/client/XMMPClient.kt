@@ -1,6 +1,7 @@
 package dev.alinco8.xmmp.client
 
 import dev.alinco8.xmmp.XMMP.LOGGER
+import dev.alinco8.xmmp.core.sharing.SharingPolicy
 import dev.alinco8.xmmp.client.network.ClientPacketSender
 import dev.alinco8.xmmp.client.network.standalone.StandalonePacketSender
 import dev.alinco8.xmmp.client.xaero.XaeroController.snapshot
@@ -32,6 +33,8 @@ object XMMPClient {
     }
 
     fun onJoinWorld() {
+        // Do not connect even to a configured standalone server in foundation releases.
+        if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
         check(session == null) { "Session should be null when joining a world" }
 
         val sender = ClientPacketSender.create()

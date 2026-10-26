@@ -32,6 +32,8 @@ class ServerPacketHandlers(private val session: ServerSession) {
     }
 
     fun handle(bytes: ByteArray, sender: UUID) {
+        // Reject all legacy network traffic before decoding or dispatching.
+        if (!session.terrainTransportEnabled) return
         val (handler, packet) = try {
             val buf = Unpooled.wrappedBuffer(bytes)
 

@@ -19,6 +19,7 @@ import dev.alinco8.xmmp.core.network.packet.S2CRegionSyncDone
 import dev.alinco8.xmmp.core.network.packet.S2CUploadAck
 import dev.alinco8.xmmp.core.server.io.ServerRegionStore
 import dev.alinco8.xmmp.core.server.network.ServerPacketHandlers
+import dev.alinco8.xmmp.core.sharing.SharingPolicy
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -43,6 +44,11 @@ class ServerSession(
     val standalone: Boolean = false,
 ) : AutoCloseable {
     val handlers = ServerPacketHandlers(this)
+
+    /** v0.1.0 compatibility/foundation release: do not expose the legacy GLOBAL terrain store.
+     *  Every inbound/outbound terrain path must be audited for scoped authorization in v0.2.0.
+     */
+    val terrainTransportEnabled: Boolean get() = SharingPolicy.TERRAIN_TRANSPORT_ENABLED
 
     private val pool = FileChannelPool(64)
 
@@ -89,6 +95,7 @@ class ServerSession(
     }
 
     fun onPlayerJoin(playerId: UUID) {
+        if (!terrainTransportEnabled) return
         val state = PlayerState(scope, serverConfig)
         playerStates[playerId] = state
 
@@ -119,6 +126,7 @@ class ServerSession(
     }
 
     fun onPlayerChannelsReady(playerId: UUID) {
+        if (!terrainTransportEnabled) return
         val state = playerStates[playerId] ?: return
         if (state.handshakeSent) return
 
@@ -130,6 +138,7 @@ class ServerSession(
     }
 
     fun onHandshake(playerId: UUID, packet: C2SHandshake) {
+        if (!terrainTransportEnabled) return
         val state = playerStates[playerId] ?: return
 
         state.enableWorldMapSync = packet.enableWorldMapSync
@@ -140,6 +149,7 @@ class ServerSession(
     }
 
     fun onDimensionSync(playerId: UUID, syncId: Int) {
+        if (!terrainTransportEnabled) return
         val playerState = getPlayerState(playerId)
         val dimension = host.getDimension(playerId) ?: return
 
@@ -165,6 +175,7 @@ class ServerSession(
     }
 
     fun onChunkUpload(playerId: UUID, packet: C2SChunkUpload) {
+        if (!terrainTransportEnabled) return
         val dimension = host.getDimension(playerId)
         if (dimension != packet.dimension) {
             LOGGER.warn(
@@ -194,6 +205,7 @@ class ServerSession(
     }
 
     private suspend fun runUploadWorker(uploaderId: UUID, state: PlayerState) {
+        if (!terrainTransportEnabled) return
         val batch = ArrayList<PlayerState.PendingUpload>()
         val maxBatch = serverConfig.shared.uploadBurst.toInt().coerceAtLeast(1)
 
@@ -247,6 +259,7 @@ class ServerSession(
     }
 
     private suspend fun runDownloadWorker(playerId: UUID, state: PlayerState) {
+        if (!terrainTransportEnabled) return
         while (true) {
             state.outbound.awaitSignal()
 
@@ -301,6 +314,7 @@ class ServerSession(
     }
 
     fun onRegionSync(playerId: UUID, layer: SyncLayer, regionPos: RegionKey, cursor: Long) {
+        if (!terrainTransportEnabled) return
         if (!serverConfig.shared.syncCaves && layer == SyncLayer.FULL_CAVE) return
 
         val playerState = getPlayerState(playerId)
@@ -344,6 +358,7 @@ class ServerSession(
     }
 
     fun onDownloadAck(playerId: UUID, completed: Int) {
+        if (!terrainTransportEnabled) return
         if (completed <= 0) return
 
         val state = playerStates[playerId] ?: return

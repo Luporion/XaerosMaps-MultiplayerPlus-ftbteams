@@ -1,0 +1,28 @@
+name: Rogler XMMP v0.1.0 NeoForge Build
+on:
+  push:
+    branches: [main, 'feat/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Check fail-closed privacy guards
+        run: python3 scripts/verify-foundation.py
+      - name: Build Minecraft 1.21.1 NeoForge
+        run: ./gradlew :1.21.1-neoforge:build --no-parallel --no-daemon
+      - name: Upload DEV source-tested JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogler-xmmp-0.1.0-unverified-runtime
+          path: versions/1.21.1-neoforge/build/libs/*.jar
+          if-no-files-found: error

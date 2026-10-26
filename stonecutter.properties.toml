@@ -1,17 +1,17 @@
 [mod]
 id = "xmmp"
-version = "1.1.1"
+version = "0.1.0"
 license = "MIT"
-name = "Xaero's Maps: Multiplayer+"
-description = "Adds more multiplayer features to Xaero's Minimap/World Map"
-author = "alinco8"
+name = "Xaero's Maps: Multiplayer+ (Rogler FTB Teams Foundation)"
+description = "Rogler FTB Teams foundation based on XMMP; terrain sharing intentionally disabled in v0.1.0"
+author = "alinco8; Rogler fork contributors"
 
 [mod.links]
-sources = "https://github.com/Alinco8/XaerosMaps-MultiplayerPlus"
-homepage = "https://github.com/Alinco8/XaerosMaps-MultiplayerPlus"
-issues = "https://github.com/Alinco8/XaerosMaps-MultiplayerPlus/issues"
+sources = "https://github.com/Luporion/XaerosMaps-MultiplayerPlus-ftbteams"
+homepage = "https://github.com/Luporion/XaerosMaps-MultiplayerPlus-ftbteams"
+issues = "https://github.com/Luporion/XaerosMaps-MultiplayerPlus-ftbteams/issues"
 forge_updates = "https://api.modrinth.com/updates/stTaMuWa/forge_updates.json"
-neoforge_updates = "https://api.modrinth.com/updates/stTaMuWa/forge_updates.json?neoforge=only"
+neoforge_updates = ""
 
 [publish]
 modrinth.id = "stTaMuWa"
@@ -126,12 +126,14 @@ yacl = { version = "3.8.2+1.21.1-fabric", range = ["3"] }
 # renovate: datasource=maven depName=org.parchmentmc.data:parchment-1.21.1 registryUrl=https://maven.parchmentmc.org
 parchment.version = "2024.11.17"
 # renovate: datasource=maven depName=net.neoforged:neoforge registryUrl=https://maven.neoforged.net/releases versioning=regex:^(?<compatibility>\d+\.\d+)\.(?<patch>\d+)(-(?<prerelease>.+))?$
-neoforge = { version = "21.1.265", range = ["21", "22"] }
+neoforge = { version = "21.1.249", range = ["21", "22"] }
 # renovate: datasource=maven depName=thedarkcolour:kotlinforforge-neoforge registryUrl=https://thedarkcolour.github.io/KotlinForForge
 kff = { version = "5.12.0", range = ["5"] }
 # renovate: datasource=maven depName=dev.isxander:yet-another-config-lib registryUrl=https://maven.isxander.dev/releases versioning=regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<compatibility>.+)$
 yacl = { version = "3.8.2+1.21.1-neoforge", range = ["3"] }
 
+xaero_minimap.version = "26.4.2"
+xaero_world_map.version = "1.45.0"
 
 [fabric."1.21.8".deps]
 # renovate: datasource=maven depName=net.fabricmc.fabric-api:fabric-api registryUrl=https://maven.fabricmc.net versioning=regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<compatibility>.+)$

@@ -24,7 +24,7 @@ class XMMPConfig {
     var flushInterval = 5000L
 
     @SerialEntry(comment = "Check for updates")
-    var checkUpdate = true
+    var checkUpdate = false
 
     @SerialEntry(comment = "Max chunk downloads to have in flight at once (the server may cap this)")
     var downloadWindow = 128

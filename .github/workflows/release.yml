@@ -8,6 +8,7 @@ permissions:
   contents: read
 jobs:
   check-version:
+    if: github.repository == 'Alinco8/XaerosMaps-MultiplayerPlus'
     runs-on: ubuntu-latest
     outputs:
       next_version: ${{ steps.check-version.outputs.next_version }}

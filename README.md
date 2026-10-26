@@ -1,3 +1,22 @@
+# Rogler Xaero Map Sharing – v0.1.0 Foundation
+
+> **SECURITY STATUS: Terrain sharing is deliberately DISABLED in v0.1.0.** Do not use this release to enable team exploration yet. The legacy global map store is not safe for competitive teams. This fork preserves Xaero's native personal map; it does not exchange map tiles until scoped stores/authorization are complete.
+
+Fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMaps-MultiplayerPlus), MIT license and upstream attribution preserved. **Mod ID stays `xmmp`. Install this fork INSTEAD of the upstream XMMP JAR, never alongside it.**
+
+- Target: Minecraft **1.21.1**, NeoForge **21.1.249**, Xaero World Map **1.45.0**, Xaero Minimap **26.4.2** (run-time compatibility with other mods such as XaeroPlus must still be tested).
+- `SharingPolicy.kt`: server-authoritative private/team/global authorization and captured publication-party semantics for a later release.
+- `FtbTeamResolver.kt`: optional FTB Teams `2101.1.11` API adapter. Missing team or mod means no team privileges. No direct dependency on Rogler SMP Core.
+- Protocol **4** (formerly 3) and fail-closed inbound/outbound terrain gates; prevents loading legacy global terrain from the `xmmp` world folder.
+- `syncCaves` defaults to **false** so normal Xaero cave world maps remain available once sharing is reintroduced.
+- `docs/ROADMAP.md`, `docs/TEST_MATRIX.md`, `docs/ARCHITECTURE.md` describe the staged development and privacy safeguards.
+
+**Build / verify:** Run `VERIFY.cmd` (Windows) or `python3 scripts/verify-foundation.py`, then check the GitHub Actions workflow `Rogler XMMP v0.1.0 NeoForge Build`. This local workspace cannot currently resolve Gradle distribution downloads, so **a successful NeoForge build is not yet demonstrated**. Do not deploy to production before CI and a separate test client/server pass.
+
+---
+
+# Original upstream documentation
+
 # Xaero's Maps: Multiplayer+
 
 [![wakatime](https://wakatime.com/badge/user/e0eb8abf-071e-4f83-bc68-6f100cbe60db/project/642dbe81-8cf7-433e-be4e-5bb47ddbfce6.svg)](https://wakatime.com/@e0eb8abf-071e-4f83-bc68-6f100cbe60db/projects/cmtsadragl)

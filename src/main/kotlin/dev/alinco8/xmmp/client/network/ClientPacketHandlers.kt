@@ -6,6 +6,7 @@ import dev.alinco8.xmmp.client.WorldContext
 import dev.alinco8.xmmp.client.XMMPClient
 import dev.alinco8.xmmp.client.network.minecraft.MinecraftPacketSender
 import dev.alinco8.xmmp.core.ResourceId
+import dev.alinco8.xmmp.core.sharing.SharingPolicy
 import dev.alinco8.xmmp.core.network.XMMPPacket
 import dev.alinco8.xmmp.core.network.packet.S2CChunkData
 import dev.alinco8.xmmp.core.network.packet.S2CHandshake
@@ -40,6 +41,9 @@ object ClientPacketHandlers {
         fromMinecraft: Boolean = true,
         isCurrentConnection: () -> Boolean = { true },
     ) {
+        // No unsolicited/legacy server should be able to write to local Xaero maps
+        // before an authorized, provenance-aware client cache exists.
+        if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
         val (handler, packet) = try {
             val id = buf.readId()
             val entry = packets[id] ?: run {

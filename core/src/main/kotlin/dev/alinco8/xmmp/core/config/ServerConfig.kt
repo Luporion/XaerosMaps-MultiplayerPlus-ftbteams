@@ -14,7 +14,7 @@ data class ServerConfig(
 ) {
     @Serializable
     data class SharedConfig(
-        val syncCaves: Boolean = true,
+        val syncCaves: Boolean = false,
         val uploadWindow: Int = 64,
         val uploadRateLimit: Double = 200.0,
         val uploadBurst: Double = 64.0,
