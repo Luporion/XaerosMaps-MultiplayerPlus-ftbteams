@@ -1,9 +1,9 @@
 [mod]
 id = "xmmp"
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT"
-name = "Xaero's Maps: Multiplayer+ (Rogler FTB Teams Foundation)"
-description = "Rogler FTB Teams foundation based on XMMP; terrain sharing intentionally disabled in v0.1.0"
+name = "Xaero's Maps: Multiplayer+ (Rogler FTB Teams Sharing)"
+description = "Rogler Xaero map sharing: scoped private, FTB-party and global exploration for NeoForge 1.21.1"
 author = "alinco8; Rogler fork contributors"
 
 [mod.links]

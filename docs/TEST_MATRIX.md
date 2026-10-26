@@ -1,3 +1,25 @@
+# v0.2.0 required DEV regression matrix
+
+**These checks remain unverified in Minecraft.** First perform CI compile, then test with 2 distinct FTB parties and OP.
+
+| Test | Required result |
+|---|---|
+| A1 TEAM discovers terrain, A2 TEAM same party | A2 sees terrain and shares one party scope |
+| B1 TEAM different party / OP | No A team region index or chunk packets |
+| GLOBAL clients | Common global scope; TEAM-only clients are not global subscribers yet |
+| PRIVATE A1 | Own server private cache, no broadcast |
+| FTB Teams absent / no party | TEAM fails closed |
+| Team changes during queues, relay or download ACKs | Old scope denied before packet send |
+| Fake scope ID in C2SRegionSync | Rejected, no file reads of requested scope |
+| Old XMMP protocol 4 | Not admitted into protocol 5 |
+| Upload > 262144 bytes, distant/fake dimension | Rejected |
+| Legacy world_map files | Never read or used as current-team data |
+| Client restart, Nether, cave mode, XaeroPlus | Test persistence/compatibility |
+| Team leave after tiles previously received | **Known limitation**: local Xaero cache retains downloaded terrain |
+| Fast-flight 8–12 players | Monitor MSPT, memory, rate-limiter and disk writes |
+
+---
+
 # DEV acceptance test matrix
 
 | ID | Scenario | Expected result | v0.1.0 |

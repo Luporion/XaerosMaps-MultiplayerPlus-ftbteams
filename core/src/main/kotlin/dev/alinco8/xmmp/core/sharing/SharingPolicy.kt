@@ -15,10 +15,26 @@ data class SharedMapGrant(
 )
 
 object SharingPolicy {
-    /** This release intentionally refuses ALL network terrain transfers.
-     *  v0.2 must replace this gate only when stores, indexes, queues and ACLs are scoped.
-     */
-    const val TERRAIN_TRANSPORT_ENABLED = false
+    /** Enabled only with server-authenticated single-scope storage, v5 packets and ACL checks. */
+    const val TERRAIN_TRANSPORT_ENABLED = true
+
+    /** IDs are generated from server-authenticated UUIDs, never from a client-provided group. */
+    fun scope(identity: SharingIdentity, mode: SharingMode): String? = when(mode) {
+        SharingMode.PRIVATE -> "private-${identity.playerId}"
+        SharingMode.TEAM -> identity.partyTeamId?.let { "team-$it" }
+        SharingMode.GLOBAL -> "global"
+    }
+
+    fun resolveMode(raw: Int): SharingMode? = SharingMode.entries.getOrNull(raw)
+    fun canReadScope(identity: SharingIdentity, mode: SharingMode, claimedScope: String): Boolean =
+        scope(identity,mode) == claimedScope
+
+    /** Scope names written under the NEW /scoped_v2 folder; no legacy shared data is read. */
+    fun isValidScope(scope: String): Boolean = scope == "global" ||
+        (scope.startsWith("team-") && isUuid(scope.removePrefix("team-"))) ||
+        (scope.startsWith("private-") && isUuid(scope.removePrefix("private-")))
+
+    private fun isUuid(text: String): Boolean = runCatching { UUID.fromString(text).toString() == text }.getOrDefault(false)
 
     fun allowed(grant: SharedMapGrant, viewer: SharingIdentity): Boolean = when {
         viewer.playerId == grant.owner -> true

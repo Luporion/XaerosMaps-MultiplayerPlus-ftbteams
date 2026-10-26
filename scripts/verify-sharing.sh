@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-python3 scripts/verify-foundation.py
+python3 scripts/verify-scoped-sharing.py
 if command -v kotlinc >/dev/null 2>&1; then
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT

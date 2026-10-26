@@ -29,6 +29,9 @@ class XMMPConfig {
     @SerialEntry(comment = "Max chunk downloads to have in flight at once (the server may cap this)")
     var downloadWindow = 128
 
+    @SerialEntry(comment = "Terrain publication / subscription scope: PRIVATE, TEAM (FTB party), GLOBAL. Set before joining. Default PRIVATE; only one scope received per session.")
+    var terrainSharingMode = "PRIVATE"
+
     @SerialEntry(comment = "World specific settings")
     var worlds = HashMap<String, WorldConfig>()
 

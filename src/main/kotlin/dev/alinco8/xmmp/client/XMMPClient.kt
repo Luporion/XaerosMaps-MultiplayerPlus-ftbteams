@@ -33,7 +33,8 @@ object XMMPClient {
     }
 
     fun onJoinWorld() {
-        // Do not connect even to a configured standalone server in foundation releases.
+        // v0.2.0 requires authenticated in-game server UUIDs for scoped sharing.
+        // Never send personal terrain to an unauthenticated standalone endpoint.
         if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
         check(session == null) { "Session should be null when joining a world" }
 
@@ -41,26 +42,9 @@ object XMMPClient {
         packetSender = sender
 
         if (sender is StandalonePacketSender) {
-            sender.connect { error ->
-                Minecraft.getInstance().execute {
-                    if (packetSender != sender) return@execute
-
-                    if (error != null) {
-                        packetSender = null
-                        LOGGER.error("Failed to connect to standalone server: $error")
-                    }
-
-                    Minecraft.getInstance().player?.displayClientMessage(
-                        Component.literal(
-                            if (error == null)
-                                "Connected to standalone server"
-                            else
-                                "Failed to connect to the standalone server"
-                        ),
-                        false
-                    )
-                }
-            }
+            sender.close()
+            packetSender = null
+            showMessage("Standalone sharing disabled: authenticated NeoForge server required")
         }
     }
 

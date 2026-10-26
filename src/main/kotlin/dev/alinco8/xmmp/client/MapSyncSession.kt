@@ -58,7 +58,7 @@ class MapSyncSession(
 ) {
     private class LayerData(
         val uploader: ChunkUploader,
-        val cursorStore: CompletableDeferred<CursorStore>,
+        val cursorStores = ConcurrentHashMap<String, CursorStore>(),
     ) {
         val writingJobs = ConcurrentHashMap<RegionKey, MutableSet<Job>>()
         val failedRegions = ConcurrentHashMap.newKeySet<RegionKey>()
@@ -74,7 +74,6 @@ class MapSyncSession(
     private val layerData: Map<SyncLayer, LayerData> = SyncLayer.entries.associateWith { layer ->
         LayerData(
             ChunkUploader(ctx, dimension.id(), layer, uploadFlow),
-            CompletableDeferred(),
         )
     }.toMap()
     private val downloader = ChunkDownloader(ctx, dimension.id(), regionRequestLimiter)
@@ -87,6 +86,8 @@ class MapSyncSession(
         }
     }
 
+    private lateinit var cursorBase: java.nio.file.Path
+    private var currentScope: String? = null
     var syncId = 0
 
     init {
@@ -104,17 +105,11 @@ class MapSyncSession(
             base = base.resolve(ctx.key.multiworldId)
         }
 
-        layerData.forEach { (layer, data) ->
-            syncScope.launch {
-                data.cursorStore.complete(
-                    CursorStore.open(layer.dirName(base))
-                )
-            }
-        }
+        cursorBase = base.resolve("scoped-v2")
 
         syncScope.launch {
             while (isActive) {
-                layerData.values.forEach { it.cursorStore.await().flush() }
+                layerData.values.forEach { it.cursorStores.values.forEach { store -> store.flush() } }
 
                 delay(XMMPConfig.HANDLER.instance().flushInterval.milliseconds)
             }
@@ -146,15 +141,24 @@ class MapSyncSession(
         }
     }
 
-    fun onRegionIndex(layer: SyncLayer, regionRevisions: Map<RegionKey, Long>) {
+    fun onRegionIndex(layer: SyncLayer, regionRevisions: Map<RegionKey, Long>, scopeId: String) {
+        if (!dev.alinco8.xmmp.core.sharing.SharingPolicy.isValidScope(scopeId)) return
+        // One server-authenticated scope at a time; no cross-team cursor reuse.
+        if (currentScope != null && currentScope != scopeId) {
+            layerData.values.forEach { it.appliedRevisions.clear(); it.latestRevisions.clear() }
+        }
+        currentScope = scopeId
         if (ctx.key.usingWorldSave) return
 
         syncScope.launch {
             val layerData = layerData[layer]!!
 
+            val store = layerData.cursorStores[scopeId] ?: CursorStore.open(layer.dirName(cursorBase.resolve(scopeId)))
+                .also { layerData.cursorStores[scopeId] = it }
             downloader.onRegionIndex(
                 layer,
-                layerData.cursorStore.await(),
+                store,
+                scopeId,
                 regionRevisions
             ) { region ->
                 layerData.failedRegions.remove(region)
@@ -242,8 +246,8 @@ class MapSyncSession(
         return job
     }
 
-    fun onRegionSyncDone(layer: SyncLayer, regionPos: RegionKey, revision: Long, syncId: Int) {
-        if (syncId != this.syncId) return
+    fun onRegionSyncDone(layer: SyncLayer, regionPos: RegionKey, revision: Long, syncId: Int, scopeId: String) {
+        if (syncId != this.syncId || scopeId != currentScope) return
 
         val layerData = layerData[layer]!!
         val jobs = layerData.writingJobs[regionPos]?.toList().orEmpty()
@@ -252,7 +256,7 @@ class MapSyncSession(
             jobs.joinAll()
             if (layerData.failedRegions.remove(regionPos)) return@launch
 
-            layerData.cursorStore.await().setCursor(regionPos, revision)
+            layerData.cursorStores[scopeId]?.setCursor(regionPos, revision)
         }
     }
 
@@ -261,10 +265,7 @@ class MapSyncSession(
 
         runBlocking {
             withTimeoutOrNull(1.seconds) {
-                layerData.values.forEach {
-                    @OptIn(ExperimentalCoroutinesApi::class)
-                    if (it.cursorStore.isCompleted) it.cursorStore.getCompleted().flush()
-                }
+                layerData.values.forEach { data -> data.cursorStores.values.forEach { it.flush() } }
             }
         }
     }

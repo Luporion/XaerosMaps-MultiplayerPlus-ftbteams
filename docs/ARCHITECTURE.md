@@ -1,3 +1,16 @@
+# v0.2.0 architecture update – scoped-v2 (source candidate)
+
+The old v0.1.0 notes below are retained as historical context, **not the active implementation**. Transport is enabled with protocol `5` in v0.2.0. See [Release/known limits](RELEASE_v0.2.0.md) and [Project status](PROJECT_STATE.md).
+
+- All accepted locally sampled uploads are written to a personal `private-<UUID>` store; if opted into TEAM or GLOBAL, duplicated to the corresponding scoped cohort store.
+- The server chooses the effective scope from authenticated player UUID, **live FTB party UUID**, and a requested sharing mode enum. It never accepts a client-supplied team ID as authority.
+- Server checks the current scope before region indexes, on region requests, in the upload worker, before and after download token waiting, and before sync completion. Queue entries belong to the currently scoped subscription; stale scope sends are blocked.
+- No legacy unscoped map file is opened. Client uses independent `scoped-v2/<scope>` revision cursor stores.
+- A client selects **one scope** per connection. TEAM cannot also download GLOBAL. Existing received tiles remain merged into the regular Xaero map; revocation, simultaneous multi-scope rendering, and true historical visitation tracking are **not implemented**.
+- The proximity upload check is only a plausibility bound, not proof of exploration against malicious clients.
+
+---
+
 # Rogler XMMP – architecture, evidence and trust boundaries
 
 ## Scope of v0.1.0

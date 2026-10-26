@@ -21,7 +21,7 @@ data class C2SChunkUpload(
                 SyncLayer.codec, C2SChunkUpload::layer,
                 ChunkKey.codec, C2SChunkUpload::chunkPos,
                 long, C2SChunkUpload::seq,
-                byteArray, C2SChunkUpload::payload,
+                boundedTilePayload, C2SChunkUpload::payload,
                 ::C2SChunkUpload
             )
         }
