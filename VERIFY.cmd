@@ -9,4 +9,6 @@ where kotlinc >nul 2>nul
 if not errorlevel 1 (
   echo Kotlin policy checks are handled by GitHub Actions Gradle build; run scripts/verify-sharing.sh on Linux for standalone CLI tests.
 )
+python scripts\test-build-monitor.py
+if errorlevel 1 exit /b 1
 echo Foundation verification OK. Real NeoForge build and multiplayer test remain required.

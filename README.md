@@ -11,6 +11,8 @@ Fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMa
 - `syncCaves` defaults to **false** so normal Xaero cave world maps remain available once sharing is reintroduced.
 - `docs/ROADMAP.md`, `docs/TEST_MATRIX.md`, `docs/ARCHITECTURE.md` describe the staged development and privacy safeguards.
 
+**GitHub-Actions-Monitor:** Nach einem Push `./WATCH.cmd` (Windows) starten, oder bei kuenftigen Updates `PATCH.cmd` verwenden (push + Monitor automatisch nach `VERIFY.cmd`). Farbiges Build-/Step-Tracking, Fehlerlogs und SHA-256-gepruefter JAR-Download nach `artifacts/`. `gh repo set-default` ist dafuer **nicht** erforderlich, weil alle `gh`-Befehle das Repository explizit angeben. [Ausfuehrliche Anleitung](docs/BUILD_MONITOR.md).
+
 **Build / verify:** Run `VERIFY.cmd` (Windows) or `python3 scripts/verify-foundation.py`, then check the GitHub Actions workflow `Rogler XMMP v0.1.0 NeoForge Build`. This local workspace cannot currently resolve Gradle distribution downloads, so **a successful NeoForge build is not yet demonstrated**. Do not deploy to production before CI and a separate test client/server pass.
 
 ---
