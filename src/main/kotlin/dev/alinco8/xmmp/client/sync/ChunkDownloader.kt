@@ -19,6 +19,7 @@ class ChunkDownloader(
     suspend fun onRegionIndex(
         layer: SyncLayer,
         cursorStore: CursorStore,
+        scopeId: String,
         regionRevisions: Map<RegionKey, Long>,
         onRequest: (RegionKey) -> Unit,
     ) {
@@ -38,7 +39,8 @@ class ChunkDownloader(
                     dimension,
                     layer,
                     pos,
-                    cursor
+                    cursor,
+                    scopeId
                 )
             )
         }

@@ -143,6 +143,7 @@ class ClientSession(val ctx: WorldContext) {
         dimension: ResourceId,
         layer: SyncLayer,
         regionRevisions: Map<RegionKey, Long>,
+        scopeId: String,
     ) {
         if (dimension != syncSession?.dimension?.id()) {
             LOGGER.warn(
@@ -153,7 +154,7 @@ class ClientSession(val ctx: WorldContext) {
             return
         }
 
-        syncSession?.onRegionIndex(layer, regionRevisions)
+        syncSession?.onRegionIndex(layer, regionRevisions, scopeId)
     }
 
     fun onChunkData(
@@ -203,7 +204,10 @@ class ClientSession(val ctx: WorldContext) {
         ctx.packetSender.send(
             C2SHandshake(
                 isWorldMapLoaded,
-                XMMPConfig.HANDLER.instance().downloadWindow
+                XMMPConfig.HANDLER.instance().downloadWindow,
+                dev.alinco8.xmmp.core.sharing.SharingMode.entries.indexOfFirst {
+                    it.name == XMMPConfig.HANDLER.instance().terrainSharingMode.uppercase()
+                }.coerceAtLeast(0)
             )
         )
     }
@@ -223,10 +227,11 @@ class ClientSession(val ctx: WorldContext) {
         regionPos: RegionKey,
         revision: Long,
         syncId: Int,
+        scopeId: String,
     ) {
         if (dimension != syncSession?.dimension?.id()) return
 
-        syncSession?.onRegionSyncDone(layer, regionPos, revision, syncId)
+        syncSession?.onRegionSyncDone(layer, regionPos, revision, syncId, scopeId)
     }
 
     private fun sendDimensionSync(session: MapSyncSession) {

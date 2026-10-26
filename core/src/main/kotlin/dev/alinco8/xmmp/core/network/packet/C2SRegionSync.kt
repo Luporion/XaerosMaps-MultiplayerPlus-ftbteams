@@ -11,6 +11,7 @@ data class C2SRegionSync(
     val layer: SyncLayer,
     val regionPos: RegionKey,
     val cursor: Long,
+    val scopeId: String,
 ) : XMMPPacket<C2SRegionSync>(Companion) {
     companion object : Type<C2SRegionSync>() {
         override val codec = with(XMMPStreamCodec) {
@@ -19,6 +20,7 @@ data class C2SRegionSync(
                 SyncLayer.codec, C2SRegionSync::layer,
                 RegionKey.codec, C2SRegionSync::regionPos,
                 long, C2SRegionSync::cursor,
+                scopeId, C2SRegionSync::scopeId,
                 ::C2SRegionSync,
             )
         }

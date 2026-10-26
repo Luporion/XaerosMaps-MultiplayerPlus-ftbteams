@@ -18,11 +18,13 @@ class Outbound {
     private val items = LinkedHashSet<Item>()
     private val wakeup = Channel<Unit>(Channel.CONFLATED)
 
-    fun enqueueChunk(layer: SyncLayer, pos: ChunkKey) {
-        synchronized(items) {
-            items.add(Chunk(layer, pos))
+    /** Bound one player's pending shared terrain to prevent unbounded queue memory. */
+    fun enqueueChunk(layer: SyncLayer, pos: ChunkKey): Boolean {
+        val accepted = synchronized(items) {
+            if (items.size >= 8192) false else { items.add(Chunk(layer, pos)); true }
         }
-        wakeup.trySend(Unit)
+        if (accepted) wakeup.trySend(Unit)
+        return accepted
     }
 
     fun enqueueDone(layer: SyncLayer, region: RegionKey, revision: Long, syncId: Int) {

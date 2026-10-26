@@ -246,6 +246,16 @@ interface XMMPStreamCodec<T> {
             { buf, value -> buf.writeByte(value.toInt()) },
         )
 
+        val scopeId = of(
+            { buf -> buf.readUtf(64) },
+            { buf, value: String -> require(value.length <= 64); buf.writeUtf(value, 64) },
+        )
+
+        val boundedTilePayload = of(
+            { buf -> buf.readByteArray(262_144) },
+            { buf, value: ByteArray -> require(value.size <= 262_144); buf.writeByteArray(value) },
+        )
+
         val byteArray = of(
             { buf -> buf.readByteArray() },
             { buf, value -> buf.writeByteArray(value) },
@@ -279,7 +289,7 @@ interface XMMPStreamCodec<T> {
         ) = of(
             { buf ->
                 val size = buf.readInt()
-
+                require(size in 0..16_384) { "Map size outside safe bounds: $size" }
                 buildMap {
                     repeat(size) {
                         put(

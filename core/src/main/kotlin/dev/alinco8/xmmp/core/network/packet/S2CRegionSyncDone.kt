@@ -12,6 +12,7 @@ data class S2CRegionSyncDone(
     val regionPos: RegionKey,
     val revision: Long,
     val syncId: Int,
+    val scopeId: String,
 ) : XMMPPacket<S2CRegionSyncDone>(Companion) {
     companion object : Type<S2CRegionSyncDone>() {
         override val codec = with(XMMPStreamCodec) {
@@ -21,6 +22,7 @@ data class S2CRegionSyncDone(
                 RegionKey.codec, S2CRegionSyncDone::regionPos,
                 long, S2CRegionSyncDone::revision,
                 int, S2CRegionSyncDone::syncId,
+                scopeId, S2CRegionSyncDone::scopeId,
                 ::S2CRegionSyncDone,
             )
         }

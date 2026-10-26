@@ -1,23 +1,29 @@
-# Rogler Xaero Map Sharing – v0.1.0 Foundation
+# Rogler Xaero Map Sharing – v0.2.0 Scoped Terrain (SOURCE CANDIDATE)
 
-> **SECURITY STATUS: Terrain sharing is deliberately DISABLED in v0.1.0.** Do not use this release to enable team exploration yet. The legacy global map store is not safe for competitive teams. This fork preserves Xaero's native personal map; it does not exchange map tiles until scoped stores/authorization are complete.
+> **Build required.** This revision introduces scoped `PRIVATE`/`TEAM`/`GLOBAL` terrain transfer, but has **not** yet compiled under NeoForge or passed gameplay testing. Use only in a DEV profile after successful GitHub Actions. Previously merged third-party Xaero tiles remain in the local cache after team exit; no safe client-side revocation exists yet. See [v0.2.0 release](docs/RELEASE_v0.2.0.md), [current project status](docs/PROJECT_STATE.md) and [roadmap](docs/ROADMAP.md).
+
+
+> **PRIVACY STATUS: v0.2.0 synchronizes one server-authorized scope per client session.** TEAM membership is checked via FTB Teams, and legacy unscoped `.xmsr` is ignored. But previously downloaded Xaero terrain is **not yet revocable**, so test with backup profiles before using the fork on a competitive server.
 
 Fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMaps-MultiplayerPlus), MIT license and upstream attribution preserved. **Mod ID stays `xmmp`. Install this fork INSTEAD of the upstream XMMP JAR, never alongside it.**
 
 - Target: Minecraft **1.21.1**, NeoForge **21.1.249**, Xaero World Map **1.45.0**, Xaero Minimap **26.4.2** (run-time compatibility with other mods such as XaeroPlus must still be tested).
-- `SharingPolicy.kt`: server-authoritative private/team/global authorization and captured publication-party semantics for a later release.
+- `SharingPolicy.kt`: server-authoritative PRIVATE/TEAM/GLOBAL scope selection, tied to FTB party UUIDs only on the server.
 - `FtbTeamResolver.kt`: optional FTB Teams `2101.1.11` API adapter. Missing team or mod means no team privileges. No direct dependency on Rogler SMP Core.
-- Protocol **4** (formerly 3) and fail-closed inbound/outbound terrain gates; prevents loading legacy global terrain from the `xmmp` world folder.
+- Protocol **5** (not compatible with old XMMP 3/4); new `scoped-v2/` stores isolate team/private/global terrain from historical unscoped server files.
 - `syncCaves` defaults to **false** so normal Xaero cave world maps remain available once sharing is reintroduced.
-- `docs/ROADMAP.md`, `docs/TEST_MATRIX.md`, `docs/ARCHITECTURE.md` describe the staged development and privacy safeguards.
+- To share, set `terrainSharingMode = "TEAM"` (or `"GLOBAL"`) in `config/xmmp.toml` on each client and reconnect. Default `PRIVATE`. Only matching selected scopes are received at this milestone; simultaneously viewing TEAM+GLOBAL comes later.
+- [Current v0.2.0 documentation](docs/RELEASE_v0.2.0.md), [roadmap](docs/ROADMAP.md) and [test matrix](docs/TEST_MATRIX.md) detail the remaining limitations.
 
 **GitHub-Actions-Monitor:** Nach einem Push `./WATCH.cmd` (Windows) starten, oder bei kuenftigen Updates `PATCH.cmd` verwenden (push + Monitor automatisch nach `VERIFY.cmd`). Farbiges Build-/Step-Tracking, Fehlerlogs und SHA-256-gepruefter JAR-Download nach `artifacts/`. `gh repo set-default` ist dafuer **nicht** erforderlich, weil alle `gh`-Befehle das Repository explizit angeben. [Ausfuehrliche Anleitung](docs/BUILD_MONITOR.md).
 
-**Build / verify:** Run `VERIFY.cmd` (Windows) or `python3 scripts/verify-foundation.py`, then check the GitHub Actions workflow `Rogler XMMP v0.1.0 NeoForge Build`. This local workspace cannot currently resolve Gradle distribution downloads, so **a successful NeoForge build is not yet demonstrated**. Do not deploy to production before CI and a separate test client/server pass.
+**Build / verify:** Run `VERIFY.cmd` on Windows; `scripts/verify-sharing.sh` runs the scoped policy tests where Kotlin CLI is present. Watch Actions with `WATCH.cmd`. The v0.1.0 build succeeded; **v0.2.0 still requires its own CI build and DEV testing**.
 
 ---
 
 # Original upstream documentation
+
+> The section below is preserved **only for attribution and upstream reference**. Its standalone/plugin setup, old all-player terrain sync, and default settings do **not** describe this v0.2.0 fork. The scoped v5 protocol currently enables terrain sharing only with an authenticated Minecraft server adapter. Please follow our [v0.2.0 notes](docs/RELEASE_v0.2.0.md).
 
 # Xaero's Maps: Multiplayer+
 

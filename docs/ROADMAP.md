@@ -11,14 +11,14 @@
 - [ ] Full NeoForge CI compilation and a real DEV client/server startup.
 - [ ] Confirm XaeroPlus, FTB Teams and Rogler Core coexist in the same DEV profile.
 
-## v0.2.0 – PER-PLAYER STORAGE + PRIVATE/TEAM/GLOBAL (first functional sharing)
+## v0.2.0 – PER-PLAYER STORAGE + PRIVATE/TEAM/GLOBAL (SOURCE CANDIDATE)
 
-- Implement per-player/owner `.xmsr` stores, versioned manifests, grants and migration guard for legacy shared store.
-- Explicit server-side share selection (PRIVATE/TEAM/GLOBAL) without permitting clients to assert team membership.
-- Owner and team authorization for **all** paths: upload, subscriptions, region indexes, region sync requests, read paths, queued chunks, ACKs, reconnect and changes in teams.
-- Validate upload coordinates using observed server-side visitation; reject fake, duplicated and unexpectedly large uploads.
-- No cross-team disclosure even during pending requests and after FTB team changes; malformed/legacy clients rejected.
-- Prefer server-controlled defaults. Any feature-flags require server admin privileges, not client-provided claims.
+- [x] Own/private `.xmsr` copies and separate team/global scoped stores; guard old unattributed shared stores. [ ] Per-tile owner manifest, migrations and revoke metadata.
+- [x] Client TOML PRIVATE/TEAM/GLOBAL choice in handshake; server resolves and verifies actual FTB party; not yet exposed in YACL UI.
+- [x] Scope authorization integrated into upload, indexes, region requests, queued chunks, ACK and download reads. [ ] Network latency adversarial tests / team-change DEV validation.
+- [x] Basic vicinity bound (24 chunks), size/payload checks. [ ] Durable server visit attribution and prevention of fabricated nearby map data.
+- [x] Server scope recheck and protocol 5. [ ] Prove no leakage during team changes in DEV, erase local foreign tiles later.
+- [x] Fail-closed PRIVATE default. [ ] Server admin policy for disallowing GLOBAL, simultaneous GLOBAL+TEAM subscriptions, UI.
 
 ## v0.3.0 – OWN EXPLORATION PROVENANCE
 

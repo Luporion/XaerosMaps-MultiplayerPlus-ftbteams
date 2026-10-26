@@ -43,6 +43,10 @@ class PlayerState(
     @Volatile
     var downloadCredits = CreditWindow(1)
 
+    @Volatile var sharingMode: dev.alinco8.xmmp.core.sharing.SharingMode = dev.alinco8.xmmp.core.sharing.SharingMode.PRIVATE
+    @Volatile var activeScope: String? = null
+    @Volatile var handshakeComplete: Boolean = false
+
     var syncId = -1
     var handshakeSent = false
     var syncedDimension: ResourceId? = null

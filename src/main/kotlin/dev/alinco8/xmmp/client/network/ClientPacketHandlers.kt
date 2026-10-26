@@ -41,8 +41,8 @@ object ClientPacketHandlers {
         fromMinecraft: Boolean = true,
         isCurrentConnection: () -> Boolean = { true },
     ) {
-        // No unsolicited/legacy server should be able to write to local Xaero maps
-        // before an authorized, provenance-aware client cache exists.
+        // v5 scoped protocol only; trusted server permissions are enforced by ServerSession.
+        // Local client Xaero cache revocation is NOT available in v0.2.0.
         if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
         val (handler, packet) = try {
             val id = buf.readId()
@@ -104,7 +104,8 @@ object ClientPacketHandlers {
             XMMPClient.session?.onRegionIndex(
                 dimension,
                 layer,
-                regionRevisions
+                regionRevisions,
+                scopeId
             )
         }
     }
@@ -128,7 +129,8 @@ object ClientPacketHandlers {
                 layer,
                 regionPos,
                 revision,
-                syncId
+                syncId,
+                scopeId
             )
         }
     }

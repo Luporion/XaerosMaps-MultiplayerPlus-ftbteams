@@ -32,7 +32,7 @@ class ServerPacketHandlers(private val session: ServerSession) {
     }
 
     fun handle(bytes: ByteArray, sender: UUID) {
-        // Reject all legacy network traffic before decoding or dispatching.
+        // Standalone/unverified hosts are disabled; Minecraft v5 channel isolates old protocols.
         if (!session.terrainTransportEnabled) return
         val (handler, packet) = try {
             val buf = Unpooled.wrappedBuffer(bytes)
@@ -95,7 +95,7 @@ class ServerPacketHandlers(private val session: ServerSession) {
             return
         }
 
-        session.onRegionSync(sender, packet.layer, packet.regionPos, packet.cursor)
+        session.onRegionSync(sender, packet.layer, packet.regionPos, packet.cursor, packet.scopeId)
     }
 
     fun handleChunkUpload(
