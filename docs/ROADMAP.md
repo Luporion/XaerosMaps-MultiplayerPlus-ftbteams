@@ -8,7 +8,7 @@
 - [x] Optional FTB Teams API adapter reading server-authoritative party/team IDs.
 - [x] Fail-closed client/server old global terrain uploads/downloads/indexes; packet version 4; old world data preserved untouched.
 - [x] New CI workflow for NeoForge JAR and safety tests; scripts for local checks.
-- [ ] Full NeoForge CI compilation and a real DEV client/server startup.
+- [x] v0.1.0 und v0.2.0 NeoForge CI build; v0.3.0 build steht noch aus. [ ] echter DEV Client/Server-Test.
 - [ ] Confirm XaeroPlus, FTB Teams and Rogler Core coexist in the same DEV profile.
 
 ## v0.2.0 – PER-PLAYER STORAGE + PRIVATE/TEAM/GLOBAL (SOURCE CANDIDATE)
@@ -20,12 +20,16 @@
 - [x] Server scope recheck and protocol 5. [ ] Prove no leakage during team changes in DEV, erase local foreign tiles later.
 - [x] Fail-closed PRIVATE default. [ ] Server admin policy for disallowing GLOBAL, simultaneous GLOBAL+TEAM subscriptions, UI.
 
-## v0.3.0 – OWN EXPLORATION PROVENANCE
+## v0.3.0 – OWN EXPLORATION PROVENANCE (SOURCE CANDIDATE)
 
-- Keep personally visited areas recorded independently of received/shared tiles, even if same tile had already been displayed.
-- Overlay permitted team/global terrain onto the personal native map without reclassifying it as personal exploration.
-- Dimension/cave and multiworld scope, cache and cursor isolation; reconnect reconciliation and bounded downloads.
-- Optional revocation feasibility prototype, without destructive changes to Xaero data.
+- [x] `PersonalExplorationJournal`: lokale getrennte Herkunft für native Xaero-Schreibvorgänge, physisch besuchte Chunks und empfangene Kacheln; atomarer Dateiaustausch und Größenlimits.
+- [x] Serverseitig berechtigter Mehrfach-Empfang (PRIVATE und bei TEAM/GLOBAL außerdem eigene FTB-Team- und globale Daten); Spieler-IDs stammen weiterhin ausschließlich vom Server.
+- [x] Paketversion 6, `scopeId` + `syncId` in Chunkdaten, Queue-Scope und erneute Berechtigungskontrolle vor dem Versand.
+- [x] Eigene Cursor-Revisionsstände je Scope, Kartenpriorität `PRIVATE > TEAM > GLOBAL`, native Kacheln vor fremden Überschreibungen schützen.
+- [x] Reconnect-/Generation-Trennung, keine automatische Legacy-Cache-Migration; lokale Tests für getrennte Provenienz.
+- [ ] Echter NeoForge-CI-Build, FTB-Teamwechsel-Attacken, Ingame-Provenienz und 8–12-Spieler-Performance testen.
+- [ ] **Noch offen:** Empfangenes Gelände wirklich als reversibles Xaero-Overlay behandeln und fremde Pixel bei Entzug entfernen, ohne eigene zu löschen.
+- [ ] **Noch offen:** Nach eigenem Besuch einer fremden Kachel eine native Pixel-Neuerfassung erzwingen; nur Visit-Markierung ist noch kein korrekt neu berechnetes Tile-Bild.
 
 ## v0.4.0 – CONFIGURATION & ADMIN UI
 

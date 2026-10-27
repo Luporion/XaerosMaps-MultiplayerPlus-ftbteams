@@ -117,7 +117,9 @@ object ClientPacketHandlers {
                 layer,
                 chunkPos,
                 revision,
-                payload
+                payload,
+                scopeId,
+                syncId
             )
         }
     }

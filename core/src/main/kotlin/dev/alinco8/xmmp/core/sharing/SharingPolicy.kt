@@ -25,6 +25,21 @@ object SharingPolicy {
         SharingMode.GLOBAL -> "global"
     }
 
+    /** Personal maps always included; TEAM and GLOBAL can additionally receive
+     *  team/global published terrain without granting uploads to those scopes.
+     *  Publishing still uses exactly one chosen scope (plus private copy).
+     */
+    fun readableScopes(identity: SharingIdentity, mode: SharingMode): List<String> {
+        val mine = "private-${identity.playerId}"
+        if (mode == SharingMode.PRIVATE) return listOf(mine)
+        val team = identity.partyTeamId?.let { "team-$it" }
+        // Never infer a party from a client-supplied ID.
+        return listOfNotNull(mine, team, "global").distinct()
+    }
+
+    fun canReceive(identity: SharingIdentity, mode: SharingMode, scopeId: String): Boolean =
+        scopeId in readableScopes(identity, mode)
+
     fun resolveMode(raw: Int): SharingMode? = SharingMode.entries.getOrNull(raw)
     fun canReadScope(identity: SharingIdentity, mode: SharingMode, claimedScope: String): Boolean =
         scope(identity,mode) == claimedScope

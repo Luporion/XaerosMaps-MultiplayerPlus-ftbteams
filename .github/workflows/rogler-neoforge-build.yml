@@ -1,4 +1,4 @@
-name: Rogler XMMP v0.2.0 NeoForge Build
+name: Rogler XMMP v0.3.0 NeoForge Build
 on:
   push:
     branches: [main, 'feat/**']
@@ -28,13 +28,13 @@ jobs:
             $parseErrors | ForEach-Object { Write-Error $_ }
             exit 1
           }
-      - name: Check per-scope privacy guards
-        run: python3 scripts/verify-scoped-sharing.py
+      - name: Check multi-scope privacy and provenance guards
+        run: python3 scripts/verify-provenance.py
       - name: Build Minecraft 1.21.1 NeoForge
         run: ./gradlew :1.21.1-neoforge:build --no-parallel --no-daemon
       - name: Upload DEV source-tested JAR
         uses: actions/upload-artifact@v4
         with:
-          name: rogler-xmmp-0.2.0-unverified-runtime
+          name: rogler-xmmp-0.3.0-unverified-runtime
           path: versions/1.21.1-neoforge/build/libs/*.jar
           if-no-files-found: error

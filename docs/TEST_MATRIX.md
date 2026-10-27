@@ -38,3 +38,19 @@
 | F12 | Gradle 9.8.2 + Java 25 runner, toolchain Java 21 | `:1.21.1-neoforge:build` and artifact pass | GitHub Actions pending |
 
 Start with all data backed up. Never deploy this v0.1.0 foundation as a functional sharing mod; sync is intentionally disabled.
+
+## v0.3.0 – Zusätzliche Abnahme (alles im Spiel noch offen)
+
+| Test | Erwartung |
+|---|---|
+| TEAM A und TEAM B; A1 erkundet | A2 sieht Teamgebiet, B1 erhält keine Team-A-Index-/Datenpakete |
+| A1 markiert GLOBAL; B1 ist TEAM | B1 sieht globales Gelände zusätzlich zur eigenen/Teamkarte |
+| A2 besucht eine vorher von A1 geteilte Kachel | Eigene `VISITED`-Provenienz wird gesetzt, unabhängig von Xaeros Cachezustand |
+| Native Xaero MapWriter schreibt dieselbe Kachel | `NATIVE` wird gesetzt; späterer Team-/Global-Download überschreibt dieses Tile nicht |
+| Zwei Freigabebereiche liefern dieselben XYZ | Private Karte gewinnt vor Team; Team gewinnt vor Global; Cursor/Revisions-Keys kollidieren nicht |
+| FTB-Teamwechsel während >128 Downloads | Keine neuen Team-A-Pakete nach Revalidierung; bereits lokal angezeigte Daten bleiben bis späterem Widerruf bestehen |
+| Client-/Serverneustart | Persönliches Journal behält native/visited/received-Markierungen; Scope-Cursor werden unter `scoped-v3` separat geführt |
+| Andere Dimension / Höhlenlayer | Keine Kreuzvermischung; nicht synchronisierte FULL_CAVE-Ebene bleibt unangetastet |
+| Falsches Scope/SyncId-Paket | Client verwirft alte oder unbekannte Chunkdaten |
+| 8–12 Spieler / schnelle Jetpacks | Kein ungeprüfter Chunk-Upload, keine Outbound-Queue ohne Limit; TPS/Memory/Traffic messen |
+| Altes XMMP v5 verbindet sich mit v6 | Handshake-Protokoll inkompatibel; keine unautorisierten Terrain-Transfers |

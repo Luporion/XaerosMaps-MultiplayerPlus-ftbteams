@@ -1,9 +1,9 @@
-# Current status – XMMP FTB Teams Fork
+# Aktueller Projektstand – XMMP FTB Teams
 
-**v0.2.0 source candidate, 27 October 2026.** [Release/risks](RELEASE_v0.2.0.md) · [Roadmap](ROADMAP.md) · [Test matrix](TEST_MATRIX.md).
+**v0.3.0 Source Candidate – 27. Oktober 2026.** Ausgangspunkt: `feat/v0.2.0-scoped-terrain` nach Kotlin-Buildfix `7dd4c2de`. Der zugehörige NeoForge-1.21.1-GitHub-Run **40588269876** war erfolgreich, die JAR `xmmp-0.2.0+1.21.1-neoforge.jar` wurde heruntergeladen. Ein Minecraft-Test von v0.2.0 ist nicht nachgewiesen.
 
-- Last confirmed full NeoForge CI build: **v0.1.0**, Run `40417466736`, commit `fad251f7`; JAR `xmmp-0.1.0+1.21.1-neoforge.jar` downloaded. A Minecraft runtime test was not confirmed in the uploaded terminal log.
-- v0.2.0: scoped storage, server-authoritative TEAM UUID, separate private copies, per-scope cursors, v5 packets, conservative upload checks and queue reauthorization implemented **as source**.
-- Automated local checks: 40 Kotlin policy assertions; scoped structural security checks; existing Build Monitor tests. Full Gradle wrapper build blocked because `services.gradle.org` cannot be resolved in this environment. **No proof of a successful NeoForge compile or gameplay behavior for v0.2.0.**
-- v0.2.0 does not offer simultaneous TEAM+GLOBAL reception, revocation of downloaded tiles, durable personal visit events for overwritten map tiles, or strict prevention of malicious near-player fabricated uploads. These are not claimed as finished features.
-- Immediate next gate: GitHub Actions on `feat/v0.2.0-scoped-terrain`, then DEV 2-party/OP test and client Xaero cache review before deployment.
+v0.3.0 führt serverautorisierten Mehrfach-Empfang (`PRIVATE` + optional `TEAM` + `GLOBAL`), Scope-/Generation-Tags in Chunkpaketen (Protokoll 6), getrennte Cursor je Bereich, eine priorisierte lokale Kartenkomposition und eine persistente persönliche Provenienz-Datei ein. Physische Besuche und native Xaero-Schreibvorgänge werden separat von empfangenen Bildern erfasst. **V0.3.0 ist nicht NeoForge-kompiliert oder im Spiel verifiziert**; sie benötigt den neuen GitHub-Build und DEV-Tests.
+
+Grenzen: Sichtbare fremde Tiles sind weiterhin in Xaeros lokalem Kartenspeicher vermischt und werden bei Teamwechsel nicht entfernt. Ein physischer Besuch beweist nicht zwingend, dass Xaero die Tile-Pixel neu berechnet hat. Provenienzdateien sind nur für Ereignisse ab Installation verlässlich; ältere verschmolzene Xaero-Daten lassen sich nicht rückwirkend zuordnen. Teamwechsel müssen weiterhin mit Testclients auf Datenabfluss unter hohen Netzwerklasten geprüft werden.
+
+Details: [v0.3.0](RELEASE_v0.3.0.md), [Roadmap](ROADMAP.md), [Testmatrix](TEST_MATRIX.md).

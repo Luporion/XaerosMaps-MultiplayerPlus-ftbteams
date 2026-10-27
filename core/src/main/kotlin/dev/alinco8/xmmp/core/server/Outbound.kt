@@ -7,28 +7,29 @@ import kotlinx.coroutines.channels.Channel
 
 class Outbound {
     sealed interface Item
-    data class Chunk(val layer: SyncLayer, val pos: ChunkKey) : Item
+    data class Chunk(val layer: SyncLayer, val pos: ChunkKey, val scopeId: String, val syncId: Int) : Item
     data class Done(
         val layer: SyncLayer,
         val region: RegionKey,
         val revision: Long,
         val syncId: Int,
+        val scopeId: String,
     ) : Item
 
     private val items = LinkedHashSet<Item>()
     private val wakeup = Channel<Unit>(Channel.CONFLATED)
 
     /** Bound one player's pending shared terrain to prevent unbounded queue memory. */
-    fun enqueueChunk(layer: SyncLayer, pos: ChunkKey): Boolean {
+    fun enqueueChunk(layer: SyncLayer, pos: ChunkKey, scopeId: String, syncId: Int): Boolean {
         val accepted = synchronized(items) {
-            if (items.size >= 8192) false else { items.add(Chunk(layer, pos)); true }
+            if (items.size >= 8192) false else { items.add(Chunk(layer, pos, scopeId, syncId)); true }
         }
         if (accepted) wakeup.trySend(Unit)
         return accepted
     }
 
-    fun enqueueDone(layer: SyncLayer, region: RegionKey, revision: Long, syncId: Int) {
-        val done = Done(layer, region, revision, syncId)
+    fun enqueueDone(layer: SyncLayer, region: RegionKey, revision: Long, syncId: Int, scopeId: String) {
+        val done = Done(layer, region, revision, syncId, scopeId)
         synchronized(items) { items.add(done) }
         wakeup.trySend(Unit)
     }

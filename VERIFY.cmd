@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 where python >nul 2>nul
 if errorlevel 1 (echo ERROR: Python is required & exit /b 1)
-python scripts\verify-scoped-sharing.py
+python scripts\verify-provenance.py
 if errorlevel 1 exit /b 1
 where kotlinc >nul 2>nul
 if not errorlevel 1 (
@@ -11,4 +11,4 @@ if not errorlevel 1 (
 )
 python scripts\test-build-monitor.py
 if errorlevel 1 exit /b 1
-echo v0.2.0 scoped sharing source checks OK. NeoForge build and multiplayer test remain required.
+echo v0.3.0 scoped provenance source checks OK. NeoForge build and multiplayer test remain required.

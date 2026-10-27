@@ -94,9 +94,14 @@ class ServerSession(
     private fun effectiveScope(playerId: UUID, state: PlayerState): String? =
         SharingPolicy.scope(SharingIdentity(playerId,host.getPartyTeamId(playerId)),state.sharingMode)
 
-    private fun validScope(playerId: UUID, state: PlayerState, claimed: String?): Boolean =
-        state.handshakeComplete && claimed != null && state.activeScope == claimed &&
-            claimed == effectiveScope(playerId,state) && host.getDimension(playerId)==state.syncedDimension
+    private fun validScope(playerId: UUID, state: PlayerState, claimed: String?): Boolean {
+        if (!state.handshakeComplete || claimed == null || !SharingPolicy.isValidScope(claimed)) return false
+        val identity = SharingIdentity(playerId, host.getPartyTeamId(playerId))
+        // A team change invalidates EVERY previously queued index and chunk.
+        if (state.activeScope != SharingPolicy.scope(identity, state.sharingMode)) return false
+        return SharingPolicy.canReceive(identity, state.sharingMode, claimed) &&
+            host.getDimension(playerId) == state.syncedDimension
+    }
 
     private fun revokeStale(playerId: UUID, state: PlayerState): Boolean {
         if (validScope(playerId,state,state.activeScope)) return false
@@ -192,20 +197,21 @@ class ServerSession(
 
         playerState.scope.launch {
             val syncCaves = serverConfig.shared.syncCaves
-            SyncLayer.entries.forEach { layer ->
-                if (!syncCaves && layer == SyncLayer.FULL_CAVE) return@forEach
-
-                if (!validScope(playerId,playerState,scopeId)) return@launch
-                host.sendToPlayer(
-                    playerId, S2CRegionIndex(
-                        dimension,
-                        layer,
-                        getRegionStore(scopeId,dimension, layer).listRegionRevisions()
+            // PRIVATE first, then TEAM, then GLOBAL. Each source has its own
+            // revision cursor, and every outgoing chunk is scope-tagged.
+            val identity=SharingIdentity(playerId,host.getPartyTeamId(playerId))
+            for (readScope in SharingPolicy.readableScopes(identity,playerState.sharingMode)) {
+                for (layer in SyncLayer.entries) {
+                    if (!syncCaves && layer == SyncLayer.FULL_CAVE) continue
+                    if (!validScope(playerId,playerState,readScope) || playerState.syncId!=syncId) return@launch
+                    host.sendToPlayer(playerId,S2CRegionIndex(
+                        dimension,layer,
+                        getRegionStore(readScope,dimension,layer).listRegionRevisions()
                             .entries.sortedWith(compareBy<Map.Entry<RegionKey, Long>>({ it.key.x }, { it.key.z }))
                             .take(16_384).associate { it.toPair() },
-                        scopeId
-                    )
-                )
+                        readScope
+                    ))
+                }
             }
         }
     }
@@ -288,10 +294,10 @@ class ServerSession(
                         val receiver=playerStates[playerId] ?: continue
                         if (!receiver.enableWorldMapSync || receiver.syncedDimension!=dimension) continue
                         if (!validScope(playerId,receiver,scopeId)) {
-                            if (receiver.activeScope==scopeId) revokeStale(playerId,receiver)
+                            if (receiver.activeScope!=effectiveScope(playerId,receiver)) revokeStale(playerId,receiver)
                             continue
                         }
-                        receiver.outbound.enqueueChunk(upload.layer,upload.chunkPos)
+                        receiver.outbound.enqueueChunk(upload.layer,upload.chunkPos,scopeId,receiver.syncId)
                     }
                 } catch (e: CancellationException) {
                     throw e
@@ -330,8 +336,11 @@ class ServerSession(
 
                 when (item) {
                     is Outbound.Chunk -> {
+                        if (item.syncId != state.syncId || !validScope(playerId,state,item.scopeId)) {
+                            credits.release(1); continue
+                        }
                         val data =
-                            getRegionStore(scopeId,dimension,item.layer).readChunkWithRevision(item.pos)
+                            getRegionStore(item.scopeId,dimension,item.layer).readChunkWithRevision(item.pos)
                                 ?: run {
                                     credits.release(1)
                                     continue
@@ -339,7 +348,9 @@ class ServerSession(
 
                         state.downloadLimiter.waitForTokens(1.0)
                         // Revalidate after async rate limiting, right before enqueueing the packet.
-                        if (!validScope(playerId,state,scopeId)) { revokeStale(playerId,state); credits.release(1); break }
+                        if (item.syncId!=state.syncId || !validScope(playerId,state,item.scopeId)) {
+                            credits.release(1); continue
+                        }
                         host.sendToPlayer(
                             playerId,
                             S2CChunkData(
@@ -347,14 +358,16 @@ class ServerSession(
                                 item.layer,
                                 item.pos,
                                 data.second,
-                                data.first
+                                data.first,
+                                item.scopeId,
+                                item.syncId
                             )
                         )
                     }
 
                     is Outbound.Done -> {
                         credits.release(1)
-                        if (!validScope(playerId,state,scopeId)) { revokeStale(playerId,state); break }
+                        if (item.syncId != state.syncId || !validScope(playerId,state,item.scopeId)) continue
                         host.sendToPlayer(
                             playerId,
                             S2CRegionSyncDone(
@@ -363,7 +376,7 @@ class ServerSession(
                                 item.region,
                                 item.revision,
                                 item.syncId,
-                                scopeId
+                                item.scopeId
                             )
                         )
                     }
@@ -404,7 +417,7 @@ class ServerSession(
 
                     if (!playerState.outbound.enqueueChunk(
                         layer,
-                        ChunkKey.fromLocal(regionPos, chunkX, chunkZ)
+                        ChunkKey.fromLocal(regionPos, chunkX, chunkZ),scopeId,syncId
                     )) return@launch // no Done: cursor must not advance on dropped data
                 }
             }
@@ -413,7 +426,7 @@ class ServerSession(
                 layer,
                 regionPos,
                 snapshot,
-                syncId
+                syncId,scopeId
             )
         }
     }

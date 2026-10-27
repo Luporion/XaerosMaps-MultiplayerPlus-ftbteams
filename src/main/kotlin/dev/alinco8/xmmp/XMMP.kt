@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 object XMMP {
     const val MOD_ID = "xmmp"
-    const val PACKET_VERSION = "5"
+    const val PACKET_VERSION = "6"
 
     @JvmField
     val LOGGER: Logger = LoggerFactory.getLogger(MOD_ID)

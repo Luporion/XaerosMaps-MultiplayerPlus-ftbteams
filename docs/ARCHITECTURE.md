@@ -1,3 +1,15 @@
+# v0.3.0 Architektur – getrennte persönliche Provenienz / mehrere gelesene Scopes
+
+**Entwicklungsstand:** Quellcode-Testkandidat, NeoForge- und Minecraft-Tests ausstehend. Die folgende v0.2.0-Beschreibung bleibt als historische Dokumentation erhalten.
+
+- Server speichert unter `scoped-v2/<private UUID|team UUID|global>/world_map/...`. Uploads werden immer privat und zusätzlich im ausdrücklich gewählten Freigabemodus abgelegt. Native FTB-Team-ID wird ausschließlich auf dem Server ermittelt.
+- Der Client empfängt unter `PRIVATE` nur eigene Bereiche, unter `TEAM` bzw. `GLOBAL` zusätzlich berechtigte Team- und global freigegebene Bereiche. `S2CChunkData` trägt in **Protokoll 6** `scopeId` + `syncId`; Queue-Elemente haben dieselben Scope-/Generationsgrenzen.
+- Client-Cursor in `scoped-v3/<scope>/<layer>`, getrennte Konflikt-/Revisionsstände. Zusammenführung: eigene native Tiles > PRIVATE > TEAM > GLOBAL. Nach Teamwechsel werden keine neuen unautorisierten Daten angenommen; XAERO-CACHE-WIDERRUF ist **nicht** umgesetzt.
+- Persönliche Provenienz wird klientseitig atomar in `personal-provenance-v3.bin` erfasst: `NATIVE` (Xaero MapWriter), `VISITED` (tatsächlich betretener Oberflächen-Chunk), `RECEIVED` (aus geteiltem Server-Scope). Ein Besuch ist ein Ereignis, keine Garantie für neu berechnete native Kartenpixel.
+- Datenschutz: An v0.3.0 gemischte bereits vorhandene Xaero-Caches ist retrospektiv keine sichere Herkunftsermittlung möglich. Vor produktiver Geheimhaltung sind zusätzliche Client-Overlay-/Cache-Schichten erforderlich.
+
+---
+
 # v0.2.0 architecture update – scoped-v2 (source candidate)
 
 The old v0.1.0 notes below are retained as historical context, **not the active implementation**. Transport is enabled with protocol `5` in v0.2.0. See [Release/known limits](RELEASE_v0.2.0.md) and [Project status](PROJECT_STATE.md).

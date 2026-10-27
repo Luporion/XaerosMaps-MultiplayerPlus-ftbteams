@@ -13,6 +13,8 @@ data class S2CChunkData(
     val chunkPos: ChunkKey,
     val revision: Long,
     val payload: ByteArray,
+    val scopeId: String,
+    val syncId: Int,
 ) : XMMPPacket<S2CChunkData>(Companion) {
     companion object : Type<S2CChunkData>() {
         override val codec = with(XMMPStreamCodec) {
@@ -21,7 +23,9 @@ data class S2CChunkData(
                 SyncLayer.codec, S2CChunkData::layer,
                 ChunkKey.codec, S2CChunkData::chunkPos,
                 long, S2CChunkData::revision,
-                byteArray, S2CChunkData::payload,
+                boundedTilePayload, S2CChunkData::payload,
+                scopeId, S2CChunkData::scopeId,
+                int, S2CChunkData::syncId,
                 ::S2CChunkData,
             )
         }
@@ -34,6 +38,7 @@ data class S2CChunkData(
                 layer == other.layer &&
                 chunkPos == other.chunkPos &&
                 revision == other.revision &&
+                scopeId == other.scopeId && syncId == other.syncId &&
                 payload.contentEquals(other.payload)
     }
 
@@ -41,7 +46,7 @@ data class S2CChunkData(
         dimension,
         layer,
         chunkPos,
-        revision,
+        revision, scopeId, syncId,
         payload.contentHashCode()
     )
 }

@@ -1,23 +1,25 @@
-# Rogler Xaero Map Sharing – v0.2.0 Scoped Terrain (SOURCE CANDIDATE)
+# Rogler Xaero Map Sharing – v0.3.0 Personal Exploration & Multi-Scope (SOURCE CANDIDATE)
 
-> **Build required.** This revision introduces scoped `PRIVATE`/`TEAM`/`GLOBAL` terrain transfer, but has **not** yet compiled under NeoForge or passed gameplay testing. Use only in a DEV profile after successful GitHub Actions. Previously merged third-party Xaero tiles remain in the local cache after team exit; no safe client-side revocation exists yet. See [v0.2.0 release](docs/RELEASE_v0.2.0.md), [current project status](docs/PROJECT_STATE.md) and [roadmap](docs/ROADMAP.md).
+> **v0.3.0 in Entwicklung:** Server-Scopes PRIVATE/TEAM/GLOBAL werden gleichzeitig als autorisierte Quellen geladen (je nach gewähltem Modus). Eigene Xaero-Schreibvorgänge und physische Besuche werden unabhängig vom geteilten Kartencache protokolliert. Es gibt noch **keine automatische Entfernung bereits eingeblendeter fremder Kartendaten**. Die Architektur ersetzt kein sicher bestätigtes DEV-Multiplayer-Testing. [v0.3.0 Release](docs/RELEASE_v0.3.0.md).
+
+> **Build required.** The previously successful v0.2.0 run is `40588269876`. **v0.3.0 has NOT been compiled with NeoForge or tested in Minecraft.** Its multi-scope client must be deployed only in a backed-up DEV profile. Third-party Xaero tiles already in local caches are still not revocable. See [v0.3.0 release](docs/RELEASE_v0.3.0.md), [project status](docs/PROJECT_STATE.md) and [roadmap](docs/ROADMAP.md).
 
 
-> **PRIVACY STATUS: v0.2.0 synchronizes one server-authorized scope per client session.** TEAM membership is checked via FTB Teams, and legacy unscoped `.xmsr` is ignored. But previously downloaded Xaero terrain is **not yet revocable**, so test with backup profiles before using the fork on a competitive server.
+> **PRIVACY STATUS: v0.3.0 synchronizes multiple separately authorized scopes per session.** TEAM membership is checked via FTB Teams, and legacy unscoped `.xmsr` is ignored. But previously downloaded Xaero terrain is **not yet revocable**, so test with backup profiles before using the fork on a competitive server.
 
 Fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMaps-MultiplayerPlus), MIT license and upstream attribution preserved. **Mod ID stays `xmmp`. Install this fork INSTEAD of the upstream XMMP JAR, never alongside it.**
 
 - Target: Minecraft **1.21.1**, NeoForge **21.1.249**, Xaero World Map **1.45.0**, Xaero Minimap **26.4.2** (run-time compatibility with other mods such as XaeroPlus must still be tested).
 - `SharingPolicy.kt`: server-authoritative PRIVATE/TEAM/GLOBAL scope selection, tied to FTB party UUIDs only on the server.
 - `FtbTeamResolver.kt`: optional FTB Teams `2101.1.11` API adapter. Missing team or mod means no team privileges. No direct dependency on Rogler SMP Core.
-- Protocol **5** (not compatible with old XMMP 3/4); new `scoped-v2/` stores isolate team/private/global terrain from historical unscoped server files.
+- Protocol **6** (not compatible with previous XMMP 3/4/5); server `scoped-v2/` stores remain isolated from historical unscoped data. Client cursors use `scoped-v3/` for clean multi-scope tracking.
 - `syncCaves` defaults to **false** so normal Xaero cave world maps remain available once sharing is reintroduced.
-- To share, set `terrainSharingMode = "TEAM"` (or `"GLOBAL"`) in `config/xmmp.toml` on each client and reconnect. Default `PRIVATE`. Only matching selected scopes are received at this milestone; simultaneously viewing TEAM+GLOBAL comes later.
-- [Current v0.2.0 documentation](docs/RELEASE_v0.2.0.md), [roadmap](docs/ROADMAP.md) and [test matrix](docs/TEST_MATRIX.md) detail the remaining limitations.
+- To share, set `terrainSharingMode = "TEAM"` (or `"GLOBAL"`) in `config/xmmp.toml` on each client and reconnect. Default `PRIVATE`. PRIVATE receives only the private map, while TEAM/GLOBAL receive their own map, permitted team maps and the global map.
+- [Current v0.3.0 documentation](docs/RELEASE_v0.3.0.md), [roadmap](docs/ROADMAP.md) and [test matrix](docs/TEST_MATRIX.md) detail the remaining limitations.
 
 **GitHub-Actions-Monitor:** Nach einem Push `./WATCH.cmd` (Windows) starten, oder bei kuenftigen Updates `PATCH.cmd` verwenden (push + Monitor automatisch nach `VERIFY.cmd`). Farbiges Build-/Step-Tracking, Fehlerlogs und SHA-256-gepruefter JAR-Download nach `artifacts/`. `gh repo set-default` ist dafuer **nicht** erforderlich, weil alle `gh`-Befehle das Repository explizit angeben. [Ausfuehrliche Anleitung](docs/BUILD_MONITOR.md).
 
-**Build / verify:** Run `VERIFY.cmd` on Windows; `scripts/verify-sharing.sh` runs the scoped policy tests where Kotlin CLI is present. Watch Actions with `WATCH.cmd`. The v0.1.0 build succeeded; **v0.2.0 still requires its own CI build and DEV testing**.
+**Build / verify:** Run `VERIFY.cmd` on Windows; `scripts/verify-sharing.sh` runs the scoped policy tests where Kotlin CLI is present. Watch Actions with `WATCH.cmd`. The v0.2.0 build succeeded (Run `40588269876`); **v0.3.0 still requires its own CI build and DEV testing**.
 
 ---
 

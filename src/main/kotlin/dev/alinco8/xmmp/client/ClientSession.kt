@@ -94,6 +94,11 @@ class ClientSession(val ctx: WorldContext) {
         }
 
         dispatcher.pump()
+        val player=Minecraft.getInstance().player
+        if(player!=null && syncSession!=null) {
+            val position=player.chunkPosition()
+            syncSession?.onPersonalVisit(position.x,position.z)
+        }
         syncSession?.onTickPost()
 
         val completed = downloadCompleted.getAndSet(0)
@@ -163,6 +168,8 @@ class ClientSession(val ctx: WorldContext) {
         chunkPos: ChunkKey,
         revision: Long,
         payload: ByteArray,
+        scopeId: String,
+        packetSyncId: Int,
     ) {
         val s = syncSession
         if (s == null || dimension != s.dimension.id()) {
@@ -170,7 +177,7 @@ class ClientSession(val ctx: WorldContext) {
             return
         }
 
-        val job = s.onChunkData(chunkPos, layer, revision, payload)
+        val job = s.onChunkData(chunkPos, layer, revision, payload,scopeId,packetSyncId)
         if (job == null) {
             downloadCompleted.incrementAndGet()
         } else {
@@ -237,6 +244,7 @@ class ClientSession(val ctx: WorldContext) {
     private fun sendDimensionSync(session: MapSyncSession) {
         val id = ++lastSyncId
         session.syncId = id
+        session.resetGeneration()
         ctx.packetSender.send(C2SDimensionSync(session.dimension.id(), id))
     }
 }
