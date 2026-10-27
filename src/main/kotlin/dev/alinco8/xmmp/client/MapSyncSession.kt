@@ -58,7 +58,7 @@ class MapSyncSession(
 ) {
     private class LayerData(
         val uploader: ChunkUploader,
-        val cursorStores = ConcurrentHashMap<String, CursorStore>(),
+        val cursorStores: ConcurrentHashMap<String, CursorStore> = ConcurrentHashMap(),
     ) {
         val writingJobs = ConcurrentHashMap<RegionKey, MutableSet<Job>>()
         val failedRegions = ConcurrentHashMap.newKeySet<RegionKey>()

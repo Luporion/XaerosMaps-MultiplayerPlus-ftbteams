@@ -48,3 +48,9 @@ Select `TEAM` for a party-only collaborative map or `GLOBAL` for a common server
 ## Rollback
 
 Backup full world, old XMMP `world_map/` directory, clients' Xaero maps, and new `scoped-v2/` before DEV. Do not overwrite the old XMMP data with scoped storage. Install the *same* previous jar on all clients/server to roll back; no automatic migration is provided. Preserve scoped data separately for later upgrades.
+
+## 2026-10-27: Kotlin compilation hotfix
+
+GitHub Actions Run `40425925311` reached `:1.21.1-neoforge:compileKotlin` but failed at `MapSyncSession.kt:61` because a Kotlin primary-constructor property lacked its required explicit type. The declaration now uses `ConcurrentHashMap<String, CursorStore>`. The subsequent unresolved `values`, `flush`, `setCursor` and `Any` type errors originate from that same syntax/type inference problem. A small static regression check prevents the declaration from regressing.
+
+**Build and Minecraft tests:** The changed source must still pass a fresh GitHub Actions build and multiplayer privacy tests. This hotfix does not change the permission model, network protocol, runtime data files or project version.

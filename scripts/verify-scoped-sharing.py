@@ -38,6 +38,9 @@ assert 'sharingMode:' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/networ
 for fn in ['C2SRegionSync','S2CRegionIndex','S2CRegionSyncDone']:
  assert 'scopeId' in read(f'core/src/main/kotlin/dev/alinco8/xmmp/core/network/packet/{fn}.kt')
 assert 'cursorBase = base.resolve("scoped-v2")' in ms and 'scopeId' in ms
+# Regression: Kotlin constructor properties require explicit parameter types.
+# Without this, the entire cursorStore map degenerates into cascading compiler errors.
+assert 'val cursorStores: ConcurrentHashMap<String, CursorStore> = ConcurrentHashMap()' in ms
 assert 'scopeId' in read('src/main/kotlin/dev/alinco8/xmmp/client/sync/ChunkDownloader.kt')
 assert 'scopeId' in c
 assert 'PACKET_VERSION = "5"' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/XMMPShared.kt')
