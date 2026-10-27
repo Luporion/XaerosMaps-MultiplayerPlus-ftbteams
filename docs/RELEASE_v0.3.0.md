@@ -30,3 +30,11 @@
 ## Installation
 
 Auf `feat/v0.2.0-scoped-terrain` nach dem Kotlin-Buildfix `7dd4c2de` neuen Branch `feat/v0.3.0-provenance` anlegen. Patch genau einmal über `PATCH.cmd` anwenden. Das Skript pusht und zeigt anschließend den GitHub-Actions-Build; erst nach grünem Build in DEV testen.
+
+## 28.10.2026 – CI-Test-Discovery-Fix (keine Gameplayänderung)
+
+Der erste v0.3.0-NeoForge-Build (`40598049157`, Commit `2e9c137f`) kompilierte Kotlin/Java erfolgreich, scheiterte aber ausschließlich bei `:1.21.1-neoforge:test`: Gradle 9.8.2 fand keine ausführbaren Tests, weil die vorhandenen Testquellen nur Kotlin-`main()`-Funktionen enthielten. `failOnNoDiscoveredTests` wird **nicht** deaktiviert.
+
+Der Hotfix ergänzt echte JUnit-5-Testklassen, die die bisherigen 51 Policy-Checks und 14 Journal-Checks ausführen, sowie JUnit Jupiter + Platform Launcher und `useJUnitPlatform()` in NeoForge und Core. CI führt jetzt zusätzlich `:core:test` aus. Die eigenständigen `main()`-Tests bleiben zum lokalen CLI-Test erhalten. Änderungen am Karten-Code, den Freigaberechten, dem Netzwerkprotokoll und der Version **gibt es nicht**.
+
+Der vollständige GitHub-Actions-Gradle-Build muss nach diesem Hotfix erneut grün werden, bevor `xmmp-0.3.0+1.21.1-neoforge.jar` installiert werden kann. Ein grüner Build beweist weiterhin keine Gameplay-/Teamprivacy-Abnahme.

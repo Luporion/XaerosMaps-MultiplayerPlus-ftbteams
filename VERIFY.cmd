@@ -9,6 +9,8 @@ where kotlinc >nul 2>nul
 if not errorlevel 1 (
   echo Kotlin policy checks are handled by GitHub Actions Gradle build; run scripts/verify-sharing.sh on Linux for standalone CLI tests.
 )
+python scripts\verify-test-discovery.py
+if errorlevel 1 exit /b 1
 python scripts\test-build-monitor.py
 if errorlevel 1 exit /b 1
 echo v0.3.0 scoped provenance source checks OK. NeoForge build and multiplayer test remain required.

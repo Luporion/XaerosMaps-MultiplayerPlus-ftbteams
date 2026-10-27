@@ -13,6 +13,10 @@ repositories {
 }
 
 dependencies {
+    testImplementation(kotlin("stdlib"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
+
     compileOnly(kotlin("stdlib"))
     compileOnly(libs.kotlinx.coroutines.core)
     compileOnly(libs.ktoml.core.jvm)
@@ -21,6 +25,11 @@ dependencies {
     compileOnly(libs.fastutil)
     compileOnly(libs.slf4j.api)
     compileOnly(libs.zstd.jni)
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+    testLogging { events("passed", "skipped", "failed") }
 }
 
 java {

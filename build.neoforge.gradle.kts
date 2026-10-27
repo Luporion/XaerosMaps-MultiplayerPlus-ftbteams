@@ -75,6 +75,12 @@ configurations {
 }
 
 dependencies {
+    // Gradle 9 fails when test sources contain only a standalone main() runner.
+    // Discover and execute the JUnit wrappers of our policy/provenance checks.
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testImplementation(kotlin("stdlib"))
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
+
     implementation("thedarkcolour:kotlinforforge-neoforge:${prop("deps.kff.version")}")
 
     jarJar("dev.alinco8.xmmp:core")
@@ -113,6 +119,10 @@ dependencies {
 }
 
 tasks {
+    named<Test>("test") {
+        useJUnitPlatform()
+        testLogging { events("passed", "skipped", "failed") }
+    }
     named("createMinecraftArtifacts") {
         dependsOn("stonecutterGenerate")
     }
