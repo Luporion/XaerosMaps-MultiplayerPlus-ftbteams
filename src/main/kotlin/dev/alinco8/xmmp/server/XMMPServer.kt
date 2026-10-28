@@ -28,7 +28,7 @@ object XMMPServer {
     }
 
     fun onServerStarted(server: MinecraftServer) {
-        XMMP.LOGGER.warn("Rogler XMMP 0.1.0 foundation: shared terrain transport is DISABLED until team-scoped storage and access checks ship")
+        XMMP.LOGGER.info("Rogler XMMP v0.4.0: authenticated scoped terrain sharing with server-authorized admin controls (DEV build)")
         check(session == null) { "Session should be null when server starts" }
 
         session = ServerSession(

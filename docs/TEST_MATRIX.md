@@ -54,3 +54,14 @@ Start with all data backed up. Never deploy this v0.1.0 foundation as a function
 | Falsches Scope/SyncId-Paket | Client verwirft alte oder unbekannte Chunkdaten |
 | 8–12 Spieler / schnelle Jetpacks | Kein ungeprüfter Chunk-Upload, keine Outbound-Queue ohne Limit; TPS/Memory/Traffic messen |
 | Altes XMMP v5 verbindet sich mit v6 | Handshake-Protokoll inkompatibel; keine unautorisierten Terrain-Transfers |
+
+## v0.4.0 admin/UI regression matrix
+- [ ] YACL mode can be cycled through exactly PRIVATE/TEAM/GLOBAL, persisted and re-handshaken
+- [ ] TEAM and GLOBAL receiving independently switch off server-authorized index/downloads
+- [ ] PRIVATE never gets external scopes even when checkboxes enabled
+- [ ] Non-OP YACL hides admin controls; forged admin packet leaves server settings unchanged
+- [ ] OP changes team/global/upload switches while players are actively downloading; no new sensitive payloads
+- [ ] Server restart keeps chosen admin settings; malformed saved file does not enable permissions
+- [ ] When re-enabled, a new handshake/reconnect starts permitted sync
+- [ ] Previously received Xaero map remains visible after revocation (known and disclosed limitation)
+- [ ] Build NeoForge 21.1.249, Xaero World Map 1.45.0, Minimap 26.4.2, XaeroPlus, Rogler Core; verify join, cave mode, memory and multiplayer privacy

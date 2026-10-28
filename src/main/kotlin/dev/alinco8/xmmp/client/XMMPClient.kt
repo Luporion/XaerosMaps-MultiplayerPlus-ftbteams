@@ -2,6 +2,8 @@ package dev.alinco8.xmmp.client
 
 import dev.alinco8.xmmp.XMMP.LOGGER
 import dev.alinco8.xmmp.core.sharing.SharingPolicy
+import dev.alinco8.xmmp.core.network.packet.S2CSharingStatus
+import dev.alinco8.xmmp.core.network.packet.C2SAdminSettings
 import dev.alinco8.xmmp.client.network.ClientPacketSender
 import dev.alinco8.xmmp.client.network.standalone.StandalonePacketSender
 import dev.alinco8.xmmp.client.xaero.XaeroController.snapshot
@@ -22,6 +24,13 @@ object XMMPClient {
     @Volatile
     var packetSender: ClientPacketSender? = null
 
+    @Volatile var sharingStatus: S2CSharingStatus? = null
+
+    fun sendAdminSettings(allowTeam: Boolean, allowGlobal: Boolean, allowUploads: Boolean) {
+        if (sharingStatus?.admin != true) return
+        packetSender?.send(C2SAdminSettings(allowTeam, allowGlobal, allowUploads))
+    }
+
     fun onInitializeClient(events: ClientEvents) {
         LOGGER.debug("Initializing XMMP client...")
 
@@ -33,6 +42,7 @@ object XMMPClient {
     }
 
     fun onJoinWorld() {
+        sharingStatus = null
         // v0.2.0 requires authenticated in-game server UUIDs for scoped sharing.
         // Never send personal terrain to an unauthenticated standalone endpoint.
         if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
@@ -49,6 +59,7 @@ object XMMPClient {
     }
 
     fun onLeaveWorld() {
+        sharingStatus = null
         val s = session
         session = null
         s?.close()

@@ -32,6 +32,12 @@ class XMMPConfig {
     @SerialEntry(comment = "Terrain publication / subscription scope: PRIVATE, TEAM (FTB party), GLOBAL. Set before joining. Default PRIVATE; PRIVATE receives own; TEAM/GLOBAL also receive authorized team and global scopes; reconnect after changing.")
     var terrainSharingMode = "PRIVATE"
 
+    @SerialEntry(comment = "Subscribe to team terrain when sharing mode is TEAM or GLOBAL. Requires connection renegotiation.")
+    var receiveTeamTerrain = true
+
+    @SerialEntry(comment = "Subscribe to global terrain when sharing mode is TEAM or GLOBAL. Requires connection renegotiation.")
+    var receiveGlobalTerrain = true
+
     @SerialEntry(comment = "World specific settings")
     var worlds = HashMap<String, WorldConfig>()
 

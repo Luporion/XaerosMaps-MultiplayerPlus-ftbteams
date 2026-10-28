@@ -214,9 +214,19 @@ class ClientSession(val ctx: WorldContext) {
                 XMMPConfig.HANDLER.instance().downloadWindow,
                 dev.alinco8.xmmp.core.sharing.SharingMode.entries.indexOfFirst {
                     it.name == XMMPConfig.HANDLER.instance().terrainSharingMode.uppercase()
-                }.coerceAtLeast(0)
+                }.coerceAtLeast(0),
+                XMMPConfig.HANDLER.instance().receiveTeamTerrain,
+                XMMPConfig.HANDLER.instance().receiveGlobalTerrain
             )
         )
+    }
+
+    /** Re-handshake first, then re-index. No server restart is required. */
+    fun syncDiagnostics(): String = syncSession?.diagnostics() ?: "No active Xaero world map sync"
+
+    fun onSharingPreferencesSaved() {
+        onHandshake()
+        syncSession?.let(::sendDimensionSync)
     }
 
     fun close() {

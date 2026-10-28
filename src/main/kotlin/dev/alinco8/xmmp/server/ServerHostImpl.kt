@@ -30,6 +30,9 @@ class ServerHostImpl(private val server: MinecraftServer) : ServerHost {
 
     override fun getPartyTeamId(playerId: UUID): UUID? = FtbTeamResolver.partyId(playerId)
 
+    override fun isMapAdministrator(playerId: UUID): Boolean =
+        server.playerList.getPlayer(playerId)?.createCommandSourceStack()?.hasPermission(2) == true
+
     override fun canObserveChunk(playerId: UUID, chunk: dev.alinco8.xmmp.core.ChunkKey): Boolean {
         val player = server.playerList.getPlayer(playerId) ?: return false
         val center = player.chunkPosition()

@@ -45,6 +45,8 @@ class PlayerState(
 
     @Volatile var sharingMode: dev.alinco8.xmmp.core.sharing.SharingMode = dev.alinco8.xmmp.core.sharing.SharingMode.PRIVATE
     @Volatile var activeScope: String? = null
+    @Volatile var receiveTeam: Boolean = true
+    @Volatile var receiveGlobal: Boolean = true
     @Volatile var handshakeComplete: Boolean = false
 
     var syncId = -1

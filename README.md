@@ -1,25 +1,17 @@
-# Rogler Xaero Map Sharing – v0.3.0 Personal Exploration & Multi-Scope (SOURCE CANDIDATE)
+# Xaero's Maps: Multiplayer+ – FTB Teams Fork v0.4.0 (DEV Source Candidate)
 
-> **v0.3.0 in Entwicklung:** Server-Scopes PRIVATE/TEAM/GLOBAL werden gleichzeitig als autorisierte Quellen geladen (je nach gewähltem Modus). Eigene Xaero-Schreibvorgänge und physische Besuche werden unabhängig vom geteilten Kartencache protokolliert. Es gibt noch **keine automatische Entfernung bereits eingeblendeter fremder Kartendaten**. Die Architektur ersetzt kein sicher bestätigtes DEV-Multiplayer-Testing. [v0.3.0 Release](docs/RELEASE_v0.3.0.md).
+**Build target:** Minecraft 1.21.1, NeoForge 21.1.249. Last **verified successful CI build** is v0.3.0 (GitHub Actions run `40605026637`, commit `6655448c`). **v0.4.0 is not yet CI-compiled or tested inside Minecraft.** Do not deploy to the live competitive server yet.
 
-> **Build required.** The previously successful v0.2.0 run is `40588269876`. **v0.3.0 has NOT been compiled with NeoForge or tested in Minecraft.** Its multi-scope client must be deployed only in a backed-up DEV profile. Third-party Xaero tiles already in local caches are still not revocable. See [v0.3.0 release](docs/RELEASE_v0.3.0.md), [project status](docs/PROJECT_STATE.md) and [roadmap](docs/ROADMAP.md).
+- **In-game settings (YACL):** choose which terrain you publish (`PRIVATE`, `TEAM`, `GLOBAL`); separately toggle permitted team and global reception. Saving changes renegotiates permissions and restarts the map sync without a server restart. `PRIVATE` is strictly personal, including received data.
+- **Server-confirmed status:** publishing scope, verified FTB party UUID (if any), and allowed reception. The team ID is obtained on the server, never asserted by a client.
+- **Admin controls:** only players whose **server-side OP permission >= 2** is verified may see the admin YACL category. They can enable/disable team sharing, global sharing and new uploads. The server checks permission AGAIN on every request. Settings persist per world under `world/xmmp/admin-controls.properties` (exact world path depends on server installation), via atomic file replacement.
+- **Security:** Scope membership checked before every sensitive async transfer. Disabled team/global sharing immediately blocks further sending. Clients should reconnect after changing admin switches; re-enabling requires a new sync handshake. Client requests are not an authorization token.
+- **Protocol 7:** v0.4.0 must be installed on BOTH server and clients. It replaces the old `xmmp` jar (do not run side-by-side). Standalone/plugin transports remain disabled for authenticated terrain sharing.
+- **Limits:** No safe retroactive removal of already received Xaero terrain on team exit; cave sync remains disabled by default; no complete pixel-level personal overlay yet. Backup Xaero data and test privacy with two adversarial teams in DEV before productive deployment.
 
+**Build:** `VERIFY.cmd` for source/monitor checks; use `PATCH.cmd` to apply the v0.4.0 patch, push and watch GitHub Actions. Downloaded JAR is under `artifacts/` after the Actions build and tests succeed. [v0.4.0 release notes](docs/RELEASE_v0.4.0.md), [roadmap](docs/ROADMAP.md), [test matrix](docs/TEST_MATRIX.md).
 
-> **PRIVACY STATUS: v0.3.0 synchronizes multiple separately authorized scopes per session.** TEAM membership is checked via FTB Teams, and legacy unscoped `.xmsr` is ignored. But previously downloaded Xaero terrain is **not yet revocable**, so test with backup profiles before using the fork on a competitive server.
-
-Fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMaps-MultiplayerPlus), MIT license and upstream attribution preserved. **Mod ID stays `xmmp`. Install this fork INSTEAD of the upstream XMMP JAR, never alongside it.**
-
-- Target: Minecraft **1.21.1**, NeoForge **21.1.249**, Xaero World Map **1.45.0**, Xaero Minimap **26.4.2** (run-time compatibility with other mods such as XaeroPlus must still be tested).
-- `SharingPolicy.kt`: server-authoritative PRIVATE/TEAM/GLOBAL scope selection, tied to FTB party UUIDs only on the server.
-- `FtbTeamResolver.kt`: optional FTB Teams `2101.1.11` API adapter. Missing team or mod means no team privileges. No direct dependency on Rogler SMP Core.
-- Protocol **6** (not compatible with previous XMMP 3/4/5); server `scoped-v2/` stores remain isolated from historical unscoped data. Client cursors use `scoped-v3/` for clean multi-scope tracking.
-- `syncCaves` defaults to **false** so normal Xaero cave world maps remain available once sharing is reintroduced.
-- To share, set `terrainSharingMode = "TEAM"` (or `"GLOBAL"`) in `config/xmmp.toml` on each client and reconnect. Default `PRIVATE`. PRIVATE receives only the private map, while TEAM/GLOBAL receive their own map, permitted team maps and the global map.
-- [Current v0.3.0 documentation](docs/RELEASE_v0.3.0.md), [roadmap](docs/ROADMAP.md) and [test matrix](docs/TEST_MATRIX.md) detail the remaining limitations.
-
-**GitHub-Actions-Monitor:** Nach einem Push `./WATCH.cmd` (Windows) starten, oder bei kuenftigen Updates `PATCH.cmd` verwenden (push + Monitor automatisch nach `VERIFY.cmd`). Farbiges Build-/Step-Tracking, Fehlerlogs und SHA-256-gepruefter JAR-Download nach `artifacts/`. `gh repo set-default` ist dafuer **nicht** erforderlich, weil alle `gh`-Befehle das Repository explizit angeben. [Ausfuehrliche Anleitung](docs/BUILD_MONITOR.md).
-
-**Build / verify:** Run `VERIFY.cmd` on Windows; `scripts/verify-sharing.sh` runs the scoped policy tests where Kotlin CLI is present. Watch Actions with `WATCH.cmd`. The v0.2.0 build succeeded (Run `40588269876`); **v0.3.0 still requires its own CI build and DEV testing**.
+**Upstream:** fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMaps-MultiplayerPlus), MIT license and attribution preserved.
 
 ---
 

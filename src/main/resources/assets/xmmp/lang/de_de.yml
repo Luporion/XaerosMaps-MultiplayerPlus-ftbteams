@@ -1,0 +1,46 @@
+xmmp:
+  config:
+    title: "Xaero Maps: Multiplayer+ Einstellungen"
+    categories:
+      general:
+        name: "Allgemein"
+        options:
+          flushInterval:
+            name: "Speicherintervall"
+            description: "Intervall für den Karten-Synchronisationsstand in Millisekunden"
+          checkUpdate:
+            name: "Auf Updates prüfen"
+            description: "Automatisch nach Updates suchen"
+          downloadWindow:
+            name: "Parallele Downloads"
+            description: "Maximale Anzahl gleichzeitiger Karten-Downloads"
+      sharing:
+        name: "Kartenerkundung teilen"
+        options:
+          terrainSharingMode:
+            name: "Meine Erkundung freigeben"
+            description: "PRIVAT nur für dich, TEAM für FTB-Teammitglieder, GLOBAL für alle. Änderungen lösen einen Neuabgleich aus."
+          receiveTeamTerrain:
+            name: "Teamkarte empfangen"
+            description: "Erkundung des eigenen FTB-Teams empfangen, wenn TEAM oder GLOBAL gewählt wurde"
+          receiveGlobalTerrain:
+            name: "Globale Karte empfangen"
+            description: "Öffentlich freigegebene Erkundung empfangen, wenn TEAM oder GLOBAL gewählt wurde"
+      admin:
+        name: "Server-Administration (nur OP)"
+        options:
+          allowTeam:
+            name: "Teamkarten erlauben"
+            description: "Neue Übertragungen für Teamkarten sofort sperren oder erlauben. Erneute Verbindung empfohlen."
+          allowGlobal:
+            name: "Globale Karten erlauben"
+            description: "Neue Übertragungen für globale Karten sofort sperren oder erlauben. Erneute Verbindung empfohlen."
+          allowUploads:
+            name: "Uploads erlauben"
+            description: "Sperrt oder erlaubt neue Karten-Uploads, ohne gespeicherte Karten zu löschen"
+      world:
+        name: "Welteinstellungen"
+        options:
+          serverAddress:
+            name: "Serveradresse"
+            description: "Adresse des eigenständigen Servers (Host:Port)"

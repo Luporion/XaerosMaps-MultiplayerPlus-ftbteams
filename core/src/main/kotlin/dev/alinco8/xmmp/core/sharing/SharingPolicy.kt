@@ -40,6 +40,19 @@ object SharingPolicy {
     fun canReceive(identity: SharingIdentity, mode: SharingMode, scopeId: String): Boolean =
         scopeId in readableScopes(identity, mode)
 
+    /** Receive preferences never grant a foreign private scope or a foreign FTB party. */
+    fun readableScopes(identity: SharingIdentity, mode: SharingMode,
+                       receiveTeam: Boolean, receiveGlobal: Boolean): List<String> {
+        val own = "private-${identity.playerId}"
+        if (mode == SharingMode.PRIVATE) return listOf(own)
+        val team = if (receiveTeam) identity.partyTeamId?.let { "team-$it" } else null
+        return listOfNotNull(own, team, if (receiveGlobal) "global" else null)
+    }
+
+    fun canReceive(identity: SharingIdentity, mode: SharingMode, scopeId: String,
+                   receiveTeam: Boolean, receiveGlobal: Boolean): Boolean =
+        scopeId in readableScopes(identity, mode, receiveTeam, receiveGlobal)
+
     fun resolveMode(raw: Int): SharingMode? = SharingMode.entries.getOrNull(raw)
     fun canReadScope(identity: SharingIdentity, mode: SharingMode, claimedScope: String): Boolean =
         scope(identity,mode) == claimedScope

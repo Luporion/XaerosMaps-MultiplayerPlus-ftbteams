@@ -12,6 +12,8 @@ import dev.alinco8.xmmp.core.io.FileChannelPool
 import dev.alinco8.xmmp.core.network.CreditWindow
 import dev.alinco8.xmmp.core.network.packet.C2SChunkUpload
 import dev.alinco8.xmmp.core.network.packet.C2SHandshake
+import dev.alinco8.xmmp.core.network.packet.C2SAdminSettings
+import dev.alinco8.xmmp.core.network.packet.S2CSharingStatus
 import dev.alinco8.xmmp.core.network.packet.S2CChunkData
 import dev.alinco8.xmmp.core.network.packet.S2CHandshake
 import dev.alinco8.xmmp.core.network.packet.S2CRegionIndex
@@ -47,11 +49,12 @@ class ServerSession(
 ) : AutoCloseable {
     val handlers = ServerPacketHandlers(this)
 
-    /** v0.2.0: scoped-v2 stores, explicit session sharing mode and v5 protocol. */
+    /** Scoped stores and protocol 7; authenticated Minecraft server only. */
     val terrainTransportEnabled: Boolean get() = SharingPolicy.TERRAIN_TRANSPORT_ENABLED &&
         !standalone && host.hasAuthenticatedPlayers
 
     private val pool = FileChannelPool(64)
+    private val adminControls = SharingAdminControls(worldDataDir.resolve("admin-controls.properties"))
 
     private val dispatcher = TickDispatcher()
     private val rootJob = SupervisorJob()
@@ -93,13 +96,16 @@ class ServerSession(
     /** Server-owned effective scope, recomputed on EVERY sensitive async operation. */
     private fun effectiveScope(playerId: UUID, state: PlayerState): String? =
         SharingPolicy.scope(SharingIdentity(playerId,host.getPartyTeamId(playerId)),state.sharingMode)
+            ?.takeIf(adminControls::allows) ?: "private-$playerId"
 
     private fun validScope(playerId: UUID, state: PlayerState, claimed: String?): Boolean {
         if (!state.handshakeComplete || claimed == null || !SharingPolicy.isValidScope(claimed)) return false
         val identity = SharingIdentity(playerId, host.getPartyTeamId(playerId))
         // A team change invalidates EVERY previously queued index and chunk.
-        if (state.activeScope != SharingPolicy.scope(identity, state.sharingMode)) return false
-        return SharingPolicy.canReceive(identity, state.sharingMode, claimed) &&
+        if (state.activeScope != effectiveScope(playerId, state)) return false
+        return adminControls.allows(claimed) &&
+            SharingPolicy.canReceive(identity, state.sharingMode, claimed,
+                state.receiveTeam, state.receiveGlobal) &&
             host.getDimension(playerId) == state.syncedDimension
     }
 
@@ -170,15 +176,49 @@ class ServerSession(
         state.syncedDimension=null
         state.syncId=-1
         state.sharingMode=requestedMode
+        state.receiveTeam=packet.receiveTeam
+        state.receiveGlobal=packet.receiveGlobal
         state.handshakeComplete=true
         state.enableWorldMapSync=packet.enableWorldMapSync
         state.activeScope=effectiveScope(playerId,state)
-        // TEAM without a verified FTB party is fully disabled (fail-closed).
-        if (state.activeScope == null) state.enableWorldMapSync=false
+        // Missing/disallowed FTB party privileges fall back to the owner's private scope.
+        // No unverified team UUID is ever used for publication or download.
         state.downloadCredits = CreditWindow(
             packet.downloadWindow.coerceIn(1, serverConfig.maxDownloadWindow.coerceAtLeast(1))
         )
         state.outbound.signal()
+        sendSharingStatus(playerId, state)
+    }
+
+    /** All controls are verified server-side; changing them cannot authorize queued data. */
+    fun onAdminSettings(playerId: UUID, packet: C2SAdminSettings) {
+        if (!terrainTransportEnabled || !host.isMapAdministrator(playerId)) return
+        try {
+            adminControls.change(SharingAdminSettings(packet.allowTeam, packet.allowGlobal, packet.allowUploads))
+        } catch (e: Exception) {
+            LOGGER.error("Failed to save server sharing controls", e)
+            return
+        }
+        for ((id, state) in playerStates) {
+            state.outbound.clear()
+            state.downloadCredits.reset()
+            state.syncedDimension=null
+            state.activeScope=effectiveScope(id,state)
+            sendSharingStatus(id,state)
+        }
+    }
+
+    private fun sendSharingStatus(playerId: UUID, state: PlayerState) {
+        if (!state.handshakeComplete) return
+        val team=host.getPartyTeamId(playerId)?.let { "team-$it" } ?: ""
+        val current=adminControls.settings
+        host.sendToPlayer(playerId, S2CSharingStatus(
+            effectiveScope(playerId,state) ?: "",team,
+            state.receiveTeam && current.allowTeam && state.sharingMode != SharingMode.PRIVATE,
+            state.receiveGlobal && current.allowGlobal && state.sharingMode != SharingMode.PRIVATE,
+            host.isMapAdministrator(playerId), current.allowTeam,
+            current.allowGlobal, current.allowUploads
+        ))
     }
 
     fun onDimensionSync(playerId: UUID, syncId: Int) {
@@ -200,7 +240,8 @@ class ServerSession(
             // PRIVATE first, then TEAM, then GLOBAL. Each source has its own
             // revision cursor, and every outgoing chunk is scope-tagged.
             val identity=SharingIdentity(playerId,host.getPartyTeamId(playerId))
-            for (readScope in SharingPolicy.readableScopes(identity,playerState.sharingMode)) {
+            for (readScope in SharingPolicy.readableScopes(identity,playerState.sharingMode,
+                playerState.receiveTeam,playerState.receiveGlobal).filter(adminControls::allows)) {
                 for (layer in SyncLayer.entries) {
                     if (!syncCaves && layer == SyncLayer.FULL_CAVE) continue
                     if (!validScope(playerId,playerState,readScope) || playerState.syncId!=syncId) return@launch
@@ -218,6 +259,10 @@ class ServerSession(
 
     fun onChunkUpload(playerId: UUID, packet: C2SChunkUpload) {
         if (!terrainTransportEnabled) return
+        if (!adminControls.settings.allowUploads) {
+            host.sendToPlayer(playerId, S2CUploadAck(packet.seq))
+            return
+        }
         val dimension = host.getDimension(playerId)
         if (dimension != packet.dimension) {
             host.sendToPlayer(playerId,S2CUploadAck(packet.seq)) // release client credits on rejected data
@@ -277,6 +322,7 @@ class ServerSession(
 
             for (upload in validated) {
                 try {
+                    if (!adminControls.settings.allowUploads) continue
                     val dimension = upload.dimension
                     val scopeId=state.activeScope ?: continue
                     if (!validScope(uploaderId,state,scopeId) ||
@@ -390,7 +436,10 @@ class ServerSession(
         if (!serverConfig.shared.syncCaves && layer == SyncLayer.FULL_CAVE) return
 
         val playerState = playerStates[playerId] ?: return
-        if (!validScope(playerId,playerState,scopeId)) { revokeStale(playerId,playerState); return }
+        if (!validScope(playerId,playerState,scopeId)) {
+            if (!validScope(playerId,playerState,playerState.activeScope)) revokeStale(playerId,playerState)
+            return
+        }
         if (!playerState.regionRequestLimiter.tryConsume(1.0)) {
             LOGGER.warn(
                 "Player {} sent region sync for ({}, {}) but is rate limited, ignoring",

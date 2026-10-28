@@ -10,6 +10,7 @@ import dev.alinco8.xmmp.core.sharing.SharingPolicy
 import dev.alinco8.xmmp.core.network.XMMPPacket
 import dev.alinco8.xmmp.core.network.packet.S2CChunkData
 import dev.alinco8.xmmp.core.network.packet.S2CHandshake
+import dev.alinco8.xmmp.core.network.packet.S2CSharingStatus
 import dev.alinco8.xmmp.core.network.packet.S2CRegionIndex
 import dev.alinco8.xmmp.core.network.packet.S2CRegionSyncDone
 import dev.alinco8.xmmp.core.network.packet.S2CUploadAck
@@ -23,6 +24,7 @@ object ClientPacketHandlers {
 
     init {
         register(S2CHandshake, ::handleHandshake)
+        register(S2CSharingStatus, ::handleSharingStatus)
         register(S2CRegionIndex, ::handleRegionIndex)
         register(S2CChunkData, ::handleChunkData)
         register(S2CRegionSyncDone, ::handleRegionSyncDone)
@@ -41,8 +43,8 @@ object ClientPacketHandlers {
         fromMinecraft: Boolean = true,
         isCurrentConnection: () -> Boolean = { true },
     ) {
-        // v5 scoped protocol only; trusted server permissions are enforced by ServerSession.
-        // Local client Xaero cache revocation is NOT available in v0.2.0.
+        // v7 scoped protocol only; trusted server permissions are enforced by ServerSession.
+        // Local client Xaero cache revocation is NOT available in v0.4.0.
         if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
         val (handler, packet) = try {
             val id = buf.readId()
@@ -97,6 +99,10 @@ object ClientPacketHandlers {
         }
 
         XMMPClient.session?.onHandshake()
+    }
+
+    fun handleSharingStatus(packet: S2CSharingStatus) {
+        XMMPClient.sharingStatus = packet
     }
 
     fun handleRegionIndex(packet: S2CRegionIndex) {

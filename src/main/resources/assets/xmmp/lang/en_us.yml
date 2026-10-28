@@ -14,6 +14,30 @@ xmmp:
           downloadWindow:
             name: "Download Window"
             description: "Max chunk downloads to have in flight at once (the server may cap this)"
+      sharing:
+        name: "Terrain Sharing"
+        options:
+          terrainSharingMode:
+            name: "Publish my terrain"
+            description: "PRIVATE (only you), TEAM (FTB party), GLOBAL (everyone). Reconnect after changing; no old shared Xaero pixels are removed."
+          receiveTeamTerrain:
+            name: "Receive team exploration"
+            description: "Subscribe to your server-verified FTB team's terrain when mode is TEAM or GLOBAL."
+          receiveGlobalTerrain:
+            name: "Receive global exploration"
+            description: "Subscribe to globally published terrain when mode is TEAM or GLOBAL."
+      admin:
+        name: "Server Admin (OP only)"
+        options:
+          allowTeam:
+            name: "Allow team map sharing"
+            description: "Blocks new team uploads and downloads immediately; reconnect clients after changing."
+          allowGlobal:
+            name: "Allow global map sharing"
+            description: "Blocks new global uploads and downloads immediately; reconnect clients after changing."
+          allowUploads:
+            name: "Allow terrain uploads"
+            description: "Disable all player uploads; old map files remain on disk."
       world:
         name: "World Specific"
         options:

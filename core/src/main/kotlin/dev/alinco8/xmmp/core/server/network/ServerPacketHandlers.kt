@@ -5,6 +5,7 @@ import dev.alinco8.xmmp.core.network.XMMPPacket
 import dev.alinco8.xmmp.core.network.packet.C2SChunkUpload
 import dev.alinco8.xmmp.core.network.packet.C2SDimensionSync
 import dev.alinco8.xmmp.core.network.packet.C2SDownloadAck
+import dev.alinco8.xmmp.core.network.packet.C2SAdminSettings
 import dev.alinco8.xmmp.core.network.packet.C2SHandshake
 import dev.alinco8.xmmp.core.network.packet.C2SRegionSync
 import dev.alinco8.xmmp.core.network.readId
@@ -18,6 +19,7 @@ class ServerPacketHandlers(private val session: ServerSession) {
 
     init {
         register(C2SHandshake, ::handleHandshake)
+        register(C2SAdminSettings, ::handleAdminSettings)
         register(C2SDimensionSync, ::handleDimensionSync)
         register(C2SRegionSync, ::handleRegionSync)
         register(C2SChunkUpload, ::handleChunkUpload)
@@ -58,6 +60,7 @@ class ServerPacketHandlers(private val session: ServerSession) {
     }
 
     fun handleHandshake(packet: C2SHandshake, sender: UUID) = session.onHandshake(sender, packet)
+    fun handleAdminSettings(packet: C2SAdminSettings, sender: UUID) = session.onAdminSettings(sender, packet)
 
     fun handleDimensionSync(packet: C2SDimensionSync, sender: UUID) {
         if (session.standalone && session.host.getDimension(sender) != packet.dimension) {

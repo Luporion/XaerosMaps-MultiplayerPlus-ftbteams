@@ -6,6 +6,7 @@ import dev.isxander.yacl3.api.Controller
 import dev.isxander.yacl3.api.Option
 import dev.isxander.yacl3.api.OptionDescription
 import dev.isxander.yacl3.api.YetAnotherConfigLib
+import dev.isxander.yacl3.api.controller.CyclingListControllerBuilder
 import dev.isxander.yacl3.api.controller.ControllerBuilder
 import dev.isxander.yacl3.api.controller.IntegerFieldControllerBuilder
 import dev.isxander.yacl3.api.controller.LongFieldControllerBuilder
@@ -38,6 +39,12 @@ private fun <T : Any> ConfigCategory.Builder.simpleOption(
         .build()
 )
 
+private data class AdminDraft(
+    var allowTeam: Boolean,
+    var allowGlobal: Boolean,
+    var allowUploads: Boolean,
+)
+
 object ConfigScreen {
     @Suppress("MaxLineLength")
     fun createScreen(parent: Screen): Screen {
@@ -45,10 +52,29 @@ object ConfigScreen {
         val d = h.defaults()
         val i = h.instance()
 
+        val status = XMMPClient.sharingStatus
+        val starting = Triple(i.terrainSharingMode, i.receiveTeamTerrain, i.receiveGlobalTerrain)
+        val adminDefaults = AdminDraft(status?.allowTeam ?: false,
+            status?.allowGlobal ?: false, status?.allowUploads ?: false)
+        val adminDraft = adminDefaults.copy()
+        val statusLabel = when {
+            status == null -> "Not connected to an XMMP server"
+            status.partyScope.isEmpty() -> "No FTB party / publishing: ${status.activePublishScope.ifEmpty { "disabled" }}"
+            else -> "FTB party: ${status.partyScope.removePrefix("team-")} / publishing: ${status.activePublishScope.ifEmpty { "disabled" }}"
+        }
+
         var builder = YetAnotherConfigLib.createBuilder()
             .title(t("title"))
             .save {
                 h.save()
+                if (starting != Triple(i.terrainSharingMode, i.receiveTeamTerrain, i.receiveGlobalTerrain)) {
+                    XMMPClient.session?.onSharingPreferencesSaved()
+                }
+                if (status?.admin == true && adminDraft != adminDefaults) {
+                    XMMPClient.sendAdminSettings(
+                        adminDraft.allowTeam, adminDraft.allowGlobal, adminDraft.allowUploads
+                    )
+                }
             }
             .category(
                 ConfigCategory.createBuilder()
@@ -73,6 +99,58 @@ object ConfigScreen {
                     )
                     .build()
             )
+
+        builder = builder.category(
+            ConfigCategory.createBuilder()
+                .name(t("categories.sharing.name"))
+                .option(
+                    Option.createBuilder<String>()
+                        .name(t("categories.sharing.options.terrainSharingMode.name"))
+                        .description(OptionDescription.of(t("categories.sharing.options.terrainSharingMode.description")))
+                        .bind(d::terrainSharingMode, i::terrainSharingMode)
+                        .controller { option -> CyclingListControllerBuilder.create(option)
+                            .values(listOf("PRIVATE", "TEAM", "GLOBAL"))
+                            .valueFormatter { Component.literal(it) } }
+                        .build()
+                )
+                .simpleOption("sharing", d::receiveTeamTerrain, i::receiveTeamTerrain,
+                    TickBoxControllerBuilder::create)
+                .simpleOption("sharing", d::receiveGlobalTerrain, i::receiveGlobalTerrain,
+                    TickBoxControllerBuilder::create)
+                .build()
+        )
+        // Server-confirmed, disabled status control. Never infer team from client config.
+        builder = builder.category(
+            ConfigCategory.createBuilder()
+                .name(Component.literal("XMMP Status"))
+                .option(
+                    Option.createBuilder<Boolean>()
+                        .name(Component.literal(statusLabel))
+                        .description(OptionDescription.of(Component.literal(
+                            "Team download: ${status?.receiveTeam == true}, global download: ${status?.receiveGlobal == true}. " +
+                            "${XMMPClient.session?.syncDiagnostics() ?: "No active sync"}. " +
+                            "New permissions do not erase already cached Xaero map tiles."
+                        )))
+                        .binding(false, { false }, {})
+                        .controller(TickBoxControllerBuilder::create)
+                        .available(false)
+                        .build()
+                )
+                .build()
+        )
+        if (status?.admin == true) {
+            builder = builder.category(
+                ConfigCategory.createBuilder()
+                    .name(t("categories.admin.name"))
+                    .simpleOption("admin", adminDefaults::allowTeam, adminDraft::allowTeam,
+                        TickBoxControllerBuilder::create)
+                    .simpleOption("admin", adminDefaults::allowGlobal, adminDraft::allowGlobal,
+                        TickBoxControllerBuilder::create)
+                    .simpleOption("admin", adminDefaults::allowUploads, adminDraft::allowUploads,
+                        TickBoxControllerBuilder::create)
+                    .build()
+            )
+        }
 
         val worldId = XMMPClient.getWorldId()
         if (worldId != null) {

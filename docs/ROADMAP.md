@@ -47,3 +47,15 @@
 - Unpublish only tiles that are not personally explored; purge ephemeral shared cache after policy changes or team exit.
 - Preserve overlapping exploration and record personal visits that occur *after* receiving a shared tile.
 - Never promise rollback of unattributed exploration merged before installing the fork.
+
+## v0.4.0 – implemented (SOURCE CANDIDATE)
+- YACL private/team/global publication selector and team/global receive switches
+- Server-confirmed party and sharing status
+- OP-only server admin toggles with server-verified permissions, persisted fail-closed
+- Protocol 7, no server restart for player preferences; client re-sync or reconnect for admin changes
+- **NOT confirmed** by NeoForge compilation or real Minecraft multiplayer tests yet
+
+## Next priorities (before production)
+- Verify 1.21.1 NeoForge CI, actual Xaero rendering and adversarial FTB teams
+- True client-side separate pixel-owned overlays and reliable cache revocation
+- Better diagnostic counters and integration tests with XaeroPlus, Rogler Core, cave layers

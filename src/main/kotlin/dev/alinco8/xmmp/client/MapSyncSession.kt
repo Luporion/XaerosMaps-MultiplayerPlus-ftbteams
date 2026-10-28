@@ -24,6 +24,7 @@ import dev.alinco8.xmmp.id
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -79,6 +80,15 @@ class MapSyncSession(
         )
     }.toMap()
     private val downloader = ChunkDownloader(ctx, dimension.id(), regionRequestLimiter)
+
+    // Session-local diagnostics, not claimed server download completion statistics.
+    private val nativeTileWrites = AtomicLong()
+    private val receivedTiles = AtomicLong()
+    private val receivedBytes = AtomicLong()
+
+    fun diagnostics(): String =
+        "Scopes: ${activeScopes.size} | Native tiles: ${nativeTileWrites.get()} | " +
+        "Received tiles: ${receivedTiles.get()} | Received KB: ${receivedBytes.get() / 1024L}"
 
     private val uploaderTickJob = ExclusiveJob {
         syncScope.launch {
@@ -153,6 +163,7 @@ class MapSyncSession(
         if (!ctx.world.sharedConfig.syncCaves && layer == SyncLayer.FULL_CAVE) return
         // Called only from native Xaero MapWriter; NOT our network writeTile().
         personalJournal.mark(layer.ordinal,x,z,PersonalExplorationJournal.NATIVE)
+        nativeTileWrites.incrementAndGet()
 
         syncScope.launch(Dispatchers.Default) {
             val buf = FriendlyByteBuf(Unpooled.buffer())
@@ -280,6 +291,8 @@ class MapSyncSession(
 
                 when (written) {
                     true -> {
+                        receivedTiles.incrementAndGet()
+                        receivedBytes.addAndGet(payload.size.toLong())
                         layerData.appliedRevisions.merge(cursorKey, revision, ::maxOf)
                         if(scopeId!=privateScopeId)
                             personalJournal.mark(layer.ordinal,chunkPos.globalX,chunkPos.globalZ,PersonalExplorationJournal.RECEIVED)

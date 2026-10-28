@@ -1,4 +1,4 @@
-name: Rogler XMMP v0.3.0 NeoForge Build
+name: Rogler XMMP v0.4.0 NeoForge Build
 on:
   push:
     branches: [main, 'feat/**']
@@ -30,6 +30,8 @@ jobs:
           }
       - name: Check multi-scope privacy and provenance guards
         run: python3 scripts/verify-provenance.py
+      - name: Check v0.4.0 in-game permission settings
+        run: python3 scripts/verify-v040-settings.py
       - name: Verify non-empty Gradle/JUnit test discovery
         run: python3 scripts/verify-test-discovery.py
       # Both suites must actually execute; Gradle 9 fails if no tests are discovered.
@@ -38,6 +40,6 @@ jobs:
       - name: Upload DEV source-tested JAR
         uses: actions/upload-artifact@v4
         with:
-          name: rogler-xmmp-0.3.0-unverified-runtime
+          name: rogler-xmmp-0.4.0-unverified-runtime
           path: versions/1.21.1-neoforge/build/libs/*.jar
           if-no-files-found: error

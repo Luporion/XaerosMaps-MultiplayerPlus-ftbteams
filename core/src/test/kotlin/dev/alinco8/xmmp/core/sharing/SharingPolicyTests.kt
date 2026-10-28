@@ -69,5 +69,12 @@ fun main() {
     expect(SharingPolicy.canReceive(nonTeam,SharingMode.PRIVATE,"global"),false)
     expect(SharingPolicy.canReceive(nonTeam,SharingMode.TEAM,"team-$teamA"),false)
     expect(SharingPolicy.canReceive(nonTeam,SharingMode.GLOBAL,"global"),true)
-    println("Rogler XMMP v0.3.0 SharingPolicyTests: $checked checks OK")
+    // v0.4.0 explicit receive permissions never cross FTB party boundaries.
+    expect(SharingPolicy.readableScopes(a,SharingMode.TEAM,false,false)==listOf("private-$alice"),true)
+    expect(SharingPolicy.readableScopes(a,SharingMode.TEAM,true,false)==listOf("private-$alice",aScope),true)
+    expect(SharingPolicy.readableScopes(a,SharingMode.GLOBAL,false,true)==listOf("private-$alice","global"),true)
+    expect(SharingPolicy.canReceive(e,SharingMode.GLOBAL,aScope,true,true),false)
+    expect(SharingPolicy.canReceive(a,SharingMode.GLOBAL,aScope,false,true),false)
+    expect(SharingPolicy.canReceive(a,SharingMode.PRIVATE,"global",true,true),false)
+    println("Rogler XMMP v0.4.0 SharingPolicyTests: $checked checks OK")
 }
