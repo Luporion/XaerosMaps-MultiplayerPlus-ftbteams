@@ -61,6 +61,7 @@ class ServerSession(
     private val scope = CoroutineScope(dispatcher + rootJob)
 
     private val playerStates = ConcurrentHashMap<UUID, PlayerState>()
+    private var lastDiagnosticNanos = System.nanoTime()
     private data class StoreId(val scope: String, val dimension: ResourceId, val layer: SyncLayer)
     private val regionStores = ConcurrentHashMap<StoreId, ServerRegionStore>()
 
@@ -98,19 +99,23 @@ class ServerSession(
         SharingPolicy.scope(SharingIdentity(playerId,host.getPartyTeamId(playerId)),state.sharingMode)
             ?.takeIf(adminControls::allows) ?: "private-$playerId"
 
+    private fun validPublication(playerId: UUID, state: PlayerState): Boolean =
+        state.handshakeComplete && state.activeScope != null &&
+            state.activeScope == effectiveScope(playerId, state) &&
+            adminControls.allows(state.activeScope!!) &&
+            state.syncedDimension != null && host.getDimension(playerId) == state.syncedDimension
+
+    /** Read ACL, distinct from publication. PRIVATE publishers may read TEAM. */
     private fun validScope(playerId: UUID, state: PlayerState, claimed: String?): Boolean {
-        if (!state.handshakeComplete || claimed == null || !SharingPolicy.isValidScope(claimed)) return false
-        val identity = SharingIdentity(playerId, host.getPartyTeamId(playerId))
-        // A team change invalidates EVERY previously queued index and chunk.
-        if (state.activeScope != effectiveScope(playerId, state)) return false
-        return adminControls.allows(claimed) &&
-            SharingPolicy.canReceive(identity, state.sharingMode, claimed,
-                state.receiveTeam, state.receiveGlobal) &&
-            host.getDimension(playerId) == state.syncedDimension
+        if (!validPublication(playerId, state) || claimed == null || !SharingPolicy.isValidScope(claimed)) return false
+        return adminControls.allows(claimed) && SharingPolicy.canReceive(
+            SharingIdentity(playerId, host.getPartyTeamId(playerId)), state.sharingMode,
+            claimed, state.receiveTeam, state.receiveGlobal
+        )
     }
 
     private fun revokeStale(playerId: UUID, state: PlayerState): Boolean {
-        if (validScope(playerId,state,state.activeScope)) return false
+        if (validPublication(playerId,state)) return false
         state.activeScope=null
         state.syncedDimension=null
         state.outbound.clear()
@@ -119,6 +124,12 @@ class ServerSession(
 
     fun onTickPost() {
         dispatcher.pump()
+        // Low frequency; no disk IO, no map iteration beyond connected players.
+        val now = System.nanoTime()
+        if (now - lastDiagnosticNanos >= 20_000_000_000L) {
+            lastDiagnosticNanos = now
+            playerStates.forEach { (id, state) -> sendSharingStatus(id, state) }
+        }
     }
 
     fun onPlayerJoin(playerId: UUID) {
@@ -217,7 +228,10 @@ class ServerSession(
             state.receiveTeam && current.allowTeam && state.sharingMode != SharingMode.PRIVATE,
             state.receiveGlobal && current.allowGlobal && state.sharingMode != SharingMode.PRIVATE,
             host.isMapAdministrator(playerId), current.allowTeam,
-            current.allowGlobal, current.allowUploads
+            current.allowGlobal, current.allowUploads,
+            state.uploadsStored.get(), state.uploadsRejected.get(),
+            state.downloadPackets.get(), state.downloadedBytes.get(),
+            state.regionRequests.get(), state.regionThrottled.get()
         ))
     }
 
@@ -260,11 +274,13 @@ class ServerSession(
     fun onChunkUpload(playerId: UUID, packet: C2SChunkUpload) {
         if (!terrainTransportEnabled) return
         if (!adminControls.settings.allowUploads) {
+            playerStates[playerId]?.uploadsRejected?.incrementAndGet()
             host.sendToPlayer(playerId, S2CUploadAck(packet.seq))
             return
         }
         val dimension = host.getDimension(playerId)
         if (dimension != packet.dimension) {
+            playerStates[playerId]?.uploadsRejected?.incrementAndGet()
             host.sendToPlayer(playerId,S2CUploadAck(packet.seq)) // release client credits on rejected data
             LOGGER.warn(
                 "Player {} sent chunk upload for dimension {} but is in {}, ignoring",
@@ -276,13 +292,18 @@ class ServerSession(
         }
 
         val state = playerStates[playerId] ?: return
-        if (!validScope(playerId,state,state.activeScope)) { revokeStale(playerId,state); return }
+        if (!validPublication(playerId,state)) {
+            state.uploadsRejected.incrementAndGet()
+            revokeStale(playerId,state); return
+        }
         // A payload is untrusted even when its codec parses. Bound bytes and observed position.
         if (packet.payload.size !in 1..262_144 || !host.canObserveChunk(playerId,packet.chunkPos)) {
+            state.uploadsRejected.incrementAndGet()
             host.sendToPlayer(playerId,S2CUploadAck(packet.seq))
             return
         }
         if (!serverConfig.shared.syncCaves && packet.layer==SyncLayer.FULL_CAVE) {
+            state.uploadsRejected.incrementAndGet()
             host.sendToPlayer(playerId,S2CUploadAck(packet.seq))
             return
         }
@@ -305,7 +326,7 @@ class ServerSession(
     private suspend fun runUploadWorker(uploaderId: UUID, state: PlayerState) {
         if (!terrainTransportEnabled) return
         val batch = ArrayList<PlayerState.PendingUpload>()
-        val maxBatch = serverConfig.shared.uploadBurst.toInt().coerceAtLeast(1)
+        val maxBatch = serverConfig.shared.uploadBurst.toInt().coerceIn(1, 32)
 
         for (first in state.uploads) {
             batch.add(first)
@@ -318,16 +339,22 @@ class ServerSession(
                 (syncCaves || it.layer != SyncLayer.FULL_CAVE)
             }
             // Never allow config to disable payload validation for shared terrain.
-            val validated = targets.filter { host.validateChunkBytes(it.payload) }
+            val validated = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                targets.filter { host.validateChunkBytes(it.payload) }
+            }
+            state.uploadsRejected.addAndGet((batch.size - validated.size).toLong())
 
             for (upload in validated) {
                 try {
-                    if (!adminControls.settings.allowUploads) continue
+                    if (!adminControls.settings.allowUploads) {
+                        state.uploadsRejected.incrementAndGet(); continue
+                    }
                     val dimension = upload.dimension
                     val scopeId=state.activeScope ?: continue
-                    if (!validScope(uploaderId,state,scopeId) ||
+                    if (!validPublication(uploaderId,state) ||
                         host.getDimension(uploaderId)!=upload.dimension ||
                         !host.canObserveChunk(uploaderId,upload.chunkPos)) {
+                        state.uploadsRejected.incrementAndGet()
                         revokeStale(uploaderId,state); continue
                     }
                     // Each explorer permanently keeps a private copy in addition to any share.
@@ -335,6 +362,7 @@ class ServerSession(
                     getRegionStore(privateScope,dimension,upload.layer).writeChunk(upload.chunkPos,upload.payload)
                     if (scopeId!=privateScope)
                         getRegionStore(scopeId,dimension,upload.layer).writeChunk(upload.chunkPos,upload.payload)
+                    state.uploadsStored.incrementAndGet()
                     for (playerId in host.listPlayers()) {
                         if (playerId==uploaderId) continue
                         val receiver=playerStates[playerId] ?: continue
@@ -371,7 +399,7 @@ class ServerSession(
             while (true) {
                 val dimension = state.syncedDimension ?: break
                 val scopeId=state.activeScope ?: break
-                if (!validScope(playerId,state,scopeId)) { revokeStale(playerId,state); break }
+                if (!validPublication(playerId,state)) { revokeStale(playerId,state); break }
                 val credits = state.downloadCredits
                 if (!credits.tryAcquire()) break
 
@@ -397,7 +425,7 @@ class ServerSession(
                         if (item.syncId!=state.syncId || !validScope(playerId,state,item.scopeId)) {
                             credits.release(1); continue
                         }
-                        host.sendToPlayer(
+                        val sent = host.sendToPlayer(
                             playerId,
                             S2CChunkData(
                                 dimension,
@@ -409,6 +437,10 @@ class ServerSession(
                                 item.syncId
                             )
                         )
+                        if (sent) {
+                            state.downloadPackets.incrementAndGet()
+                            state.downloadedBytes.addAndGet(data.first.size.toLong())
+                        } else credits.release(1)
                     }
 
                     is Outbound.Done -> {
@@ -440,7 +472,9 @@ class ServerSession(
             if (!validScope(playerId,playerState,playerState.activeScope)) revokeStale(playerId,playerState)
             return
         }
+        playerState.regionRequests.incrementAndGet()
         if (!playerState.regionRequestLimiter.tryConsume(1.0)) {
+            playerState.regionThrottled.incrementAndGet()
             LOGGER.warn(
                 "Player {} sent region sync for ({}, {}) but is rate limited, ignoring",
                 playerId,
@@ -485,7 +519,7 @@ class ServerSession(
         if (completed <= 0) return
 
         val state = playerStates[playerId] ?: return
-        if (!validScope(playerId,state,state.activeScope)) { revokeStale(playerId,state); return }
+        if (!validPublication(playerId,state)) { revokeStale(playerId,state); return }
         state.downloadCredits.release(completed)
         state.outbound.signal()
     }

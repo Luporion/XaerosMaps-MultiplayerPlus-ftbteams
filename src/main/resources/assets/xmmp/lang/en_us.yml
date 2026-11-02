@@ -16,25 +16,39 @@ xmmp:
             description: "Max chunk downloads to have in flight at once (the server may cap this)"
       sharing:
         name: "Terrain Sharing"
+        warning:
+          headline: "DANGER: GLOBAL sharing in PvP / Fog of War!"
+          everyone: "GLOBAL publishes explored terrain to ALL teams, including enemies. Bases, paths and secret locations can be exposed."
+          irreversible: "Previously downloaded map data CANNOT be recalled after changing the setting or leaving a team."
         options:
+          globalRiskAcknowledged:
+            name: "I understand: GLOBAL can reveal my base to enemy teams"
+            description: "Required before saving a NEW GLOBAL publication. Not required for TEAM or PRIVATE. The checkbox resets each time you open settings."
           terrainSharingMode:
             name: "Publish my terrain"
-            description: "PRIVATE (only you), TEAM (FTB party), GLOBAL (everyone). Reconnect after changing; no old shared Xaero pixels are removed."
+            description: "PRIVATE: personal only. TEAM: verified FTB party only. GLOBAL: ALL players, including enemy PvP teams! Fog of War / hidden bases may be exposed permanently. New GLOBAL publication requires explicit acknowledgement."
+            globalDanger: "GLOBAL - DANGER: ALL TEAMS"
           receiveTeamTerrain:
             name: "Receive team exploration"
-            description: "Subscribe to your server-verified FTB team's terrain when mode is TEAM or GLOBAL."
+            description: "Download terrain from your verified FTB party even when publishing PRIVATE. Receiving does not upload your own map."
           receiveGlobalTerrain:
             name: "Receive global exploration"
-            description: "Subscribe to globally published terrain when mode is TEAM or GLOBAL."
+            description: "DOWNLOAD public maps published by others. Does NOT publish your private exploration. Can reveal otherwise hidden public terrain. Default OFF."
       admin:
         name: "Server Admin (OP only)"
+        warning:
+          headline: "DANGER: enabling GLOBAL sharing affects the entire PvP server!"
+          message: "Enemy teams could receive terrain and base locations; already downloaded map data cannot be withdrawn. Default OFF for new worlds."
         options:
+          globalRiskAcknowledged:
+            name: "I understand: enabling GLOBAL affects all teams"
+            description: "Required when enabling GLOBAL server-wide. Does not affect ordinary TEAM sharing."
           allowTeam:
             name: "Allow team map sharing"
             description: "Blocks new team uploads and downloads immediately; reconnect clients after changing."
           allowGlobal:
             name: "Allow global map sharing"
-            description: "Blocks new global uploads and downloads immediately; reconnect clients after changing."
+            description: "HIGH RISK for PvP: allow worldwide publication to ALL teams. Disable by default. Turning it off blocks NEW transfers but cannot erase already cached enemy map data."
           allowUploads:
             name: "Allow terrain uploads"
             description: "Disable all player uploads; old map files remain on disk."

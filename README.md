@@ -1,15 +1,17 @@
-# Xaero's Maps: Multiplayer+ – FTB Teams Fork v0.4.0 (DEV Source Candidate)
+# Xaero's Maps: Multiplayer+ – FTB Teams Fork v0.4.1 (PvP Warning Hotfix)
 
-**Build target:** Minecraft 1.21.1, NeoForge 21.1.249. Last **verified successful CI build** is v0.3.0 (GitHub Actions run `40605026637`, commit `6655448c`). **v0.4.0 is not yet CI-compiled or tested inside Minecraft.** Do not deploy to the live competitive server yet.
+**Build target:** Minecraft 1.21.1, NeoForge 21.1.249. Last verified successful CI build from this code line is v0.4.0 (GitHub Actions run `40609501149`, commit `5207ae8f`). **v0.4.2 needs a fresh NeoForge CI build AND Minecraft multiplayer runtime validation.** Do not deploy to the live competitive server yet. This combined patch also includes the v0.4.1 GLOBAL PvP/Fog-of-War warnings.
 
-- **In-game settings (YACL):** choose which terrain you publish (`PRIVATE`, `TEAM`, `GLOBAL`); separately toggle permitted team and global reception. Saving changes renegotiates permissions and restarts the map sync without a server restart. `PRIVATE` is strictly personal, including received data.
+**PvP/Fog-of-War safety:** GLOBAL publishes your exploration to **every player, including enemies**. The GUI now contains prominent red warnings and a one-time acknowledgement before turning on GLOBAL publication or enabling it server-wide. Newly created worlds disallow GLOBAL by default. Changing permissions does **not** remove any terrain already cached by other clients. TEAM sharing is unaffected. Receiving GLOBAL data is separate from publishing it; global reception defaults to OFF.
+
+- **In-game settings (YACL):** choose which terrain you publish (`PRIVATE`, `TEAM`, `GLOBAL`) independently from which maps you receive. `PRIVATE` publication can download authorized FTB team terrain without sharing private exploration. GLOBAL publication has explicit PvP confirmation; global reception is off by default. Saving changes renegotiates permissions and restarts the map sync without a server restart. `PRIVATE` affects publication only; read permissions still require verified FTB party and explicit subscriptions.
 - **Server-confirmed status:** publishing scope, verified FTB party UUID (if any), and allowed reception. The team ID is obtained on the server, never asserted by a client.
 - **Admin controls:** only players whose **server-side OP permission >= 2** is verified may see the admin YACL category. They can enable/disable team sharing, global sharing and new uploads. The server checks permission AGAIN on every request. Settings persist per world under `world/xmmp/admin-controls.properties` (exact world path depends on server installation), via atomic file replacement.
 - **Security:** Scope membership checked before every sensitive async transfer. Disabled team/global sharing immediately blocks further sending. Clients should reconnect after changing admin switches; re-enabling requires a new sync handshake. Client requests are not an authorization token.
-- **Protocol 7:** v0.4.0 must be installed on BOTH server and clients. It replaces the old `xmmp` jar (do not run side-by-side). Standalone/plugin transports remain disabled for authenticated terrain sharing.
+- **Protocol 8:** v0.4.2 must be installed on BOTH server and clients. It replaces the old `xmmp` jar (do not run side-by-side). Standalone/plugin transports remain disabled for authenticated terrain sharing.
 - **Limits:** No safe retroactive removal of already received Xaero terrain on team exit; cave sync remains disabled by default; no complete pixel-level personal overlay yet. Backup Xaero data and test privacy with two adversarial teams in DEV before productive deployment.
 
-**Build:** `VERIFY.cmd` for source/monitor checks; use `PATCH.cmd` to apply the v0.4.0 patch, push and watch GitHub Actions. Downloaded JAR is under `artifacts/` after the Actions build and tests succeed. [v0.4.0 release notes](docs/RELEASE_v0.4.0.md), [roadmap](docs/ROADMAP.md), [test matrix](docs/TEST_MATRIX.md).
+**Build:** `VERIFY.cmd` for source/monitor checks; use `PATCH.cmd` to apply the v0.4.0 patch, push and watch GitHub Actions. Downloaded JAR is under `artifacts/` after the Actions build and tests succeed. [v0.4.2 release notes](docs/RELEASE_v0.4.2.md), [roadmap](docs/ROADMAP.md), [test matrix](docs/TEST_MATRIX.md).
 
 **Upstream:** fork of [Alinco8/XaerosMaps-MultiplayerPlus](https://github.com/Alinco8/XaerosMaps-MultiplayerPlus), MIT license and attribution preserved.
 

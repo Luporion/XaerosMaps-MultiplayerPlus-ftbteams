@@ -13,8 +13,8 @@ journal=read('src/main/kotlin/dev/alinco8/xmmp/client/io/PersonalExplorationJour
 assert 'readableScopes(identity: SharingIdentity, mode: SharingMode)' in p
 assert 'canReceive(identity: SharingIdentity' in p
 assert 'SharingPolicy.readableScopes(identity,playerState.sharingMode,' in s
-assert 'SharingPolicy.canReceive(identity, state.sharingMode, claimed,' in s
-assert 'state.activeScope != effectiveScope(playerId, state)' in s
+assert 'SharingPolicy.canReceive(' in s
+assert 'state.activeScope == effectiveScope(playerId, state)' in s
 assert 'validScope(playerId,state,item.scopeId)' in s
 assert 'validScope(playerId,playerState,scopeId)' in s
 assert 'getRegionStore(item.scopeId,dimension,item.layer)' in s
@@ -32,9 +32,9 @@ assert 'personalJournal.flush()' in ms
 assert 'scopeId !in activeScopes' in ms and 'packetSyncId != syncId' in ms
 assert 'session.resetGeneration()' in c and 'onPersonalVisit(position.x,position.z)' in c
 assert 'private const val MAX_ENTRIES' in journal and 'ATOMIC_MOVE' in journal
-assert 'PACKET_VERSION = "7"' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/XMMPShared.kt')
-assert 'PACKET_VERSION = "7"' in read('src/main/kotlin/dev/alinco8/xmmp/XMMP.kt')
-assert 'version=0.4.0' in read('gradle.properties')
-assert 'version = "0.4.0"' in read('stonecutter.properties.toml')
+assert 'PACKET_VERSION = "8"' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/XMMPShared.kt')
+assert 'PACKET_VERSION = "8"' in read('src/main/kotlin/dev/alinco8/xmmp/XMMP.kt')
+assert 'version=0.4.2' in read('gradle.properties')
+assert 'version = "0.4.2"' in read('stonecutter.properties.toml')
 assert 'hasAuthenticatedPlayers' in s
 print('XMMP v0.4.0 scope ACL / provenance / packet guards: source checks OK')

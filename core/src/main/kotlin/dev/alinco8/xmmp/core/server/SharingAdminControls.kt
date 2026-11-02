@@ -5,10 +5,10 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.Properties
 
-/** Runtime server controls, not trusted client state. Defaults keep v0.3 behaviour. */
+/** Runtime server controls, not trusted client state. PvP-safe default: GLOBAL disabled. */
 data class SharingAdminSettings(
     val allowTeam: Boolean = true,
-    val allowGlobal: Boolean = true,
+    val allowGlobal: Boolean = false,
     val allowUploads: Boolean = true,
 )
 

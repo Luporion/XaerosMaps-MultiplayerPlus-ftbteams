@@ -11,6 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.job
+import java.util.concurrent.atomic.AtomicLong
 
 class PlayerState(
     parentScope: CoroutineScope,
@@ -39,6 +40,15 @@ class PlayerState(
 
     val uploads = Channel<PendingUpload>(serverConfig.shared.uploadWindow + 16)
     val outbound = Outbound()
+
+    // Session-local diagnostics. These counters are NOT a guarantee of remote
+    // client-side map visibility; separate client counters establish that.
+    val uploadsStored = AtomicLong()
+    val uploadsRejected = AtomicLong()
+    val downloadPackets = AtomicLong()
+    val downloadedBytes = AtomicLong()
+    val regionRequests = AtomicLong()
+    val regionThrottled = AtomicLong()
 
     @Volatile
     var downloadCredits = CreditWindow(1)

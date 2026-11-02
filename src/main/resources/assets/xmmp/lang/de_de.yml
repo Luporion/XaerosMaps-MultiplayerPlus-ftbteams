@@ -16,25 +16,39 @@ xmmp:
             description: "Maximale Anzahl gleichzeitiger Karten-Downloads"
       sharing:
         name: "Kartenerkundung teilen"
+        warning:
+          headline: "GEFAHR: GLOBAL verrät Gebiete im PvP / Fog of War!"
+          everyone: "GLOBAL veröffentlicht erkundete Gebiete für ALLE Teams, auch Gegner. Basen, Wege und geheime Orte können sichtbar werden."
+          irreversible: "Einmal heruntergeladene Karten können auch nach Teamwechsel oder Deaktivierung NICHT zurückgerufen werden."
         options:
+          globalRiskAcknowledged:
+            name: "Mir ist klar: GLOBAL kann meine Basis an Gegner verraten"
+            description: "Pflichtbestätigung vor erstmaligem GLOBAL-Veröffentlichen. Für TEAM und PRIVAT nicht nötig. Beim erneuten Öffnen zurückgesetzt."
           terrainSharingMode:
             name: "Meine Erkundung freigeben"
-            description: "PRIVAT nur für dich, TEAM für FTB-Teammitglieder, GLOBAL für alle. Änderungen lösen einen Neuabgleich aus."
+            description: "PRIVAT: nur für dich. TEAM: nur für das verifizierte FTB-Team. GLOBAL: ALLE Spieler, auch gegnerische PvP-Teams! Fog of War und geheime Basen können dauerhaft offengelegt werden. GLOBAL erfordert eine bewusste Bestätigung."
+            globalDanger: "GLOBAL - GEFAHR: ALLE TEAMS"
           receiveTeamTerrain:
             name: "Teamkarte empfangen"
-            description: "Erkundung des eigenen FTB-Teams empfangen, wenn TEAM oder GLOBAL gewählt wurde"
+            description: "Erkundung des eigenen FTB-Teams empfangen – auch wenn deine eigene Karte auf PRIVAT bleibt. Empfang veröffentlicht keine eigenen Daten."
           receiveGlobalTerrain:
             name: "Globale Karte empfangen"
-            description: "Öffentlich freigegebene Erkundung empfangen, wenn TEAM oder GLOBAL gewählt wurde"
+            description: "Lädt die öffentlichen Karten ANDERER herunter, veröffentlicht aber NICHT deine eigene Karte. Dadurch können verborgene Gebiete sichtbar werden. Standard AUS."
       admin:
         name: "Server-Administration (nur OP)"
+        warning:
+          headline: "GEFAHR: GLOBAL-Freigabe betrifft den gesamten PvP-Server!"
+          message: "Auch Gegner können Karten und Basen erhalten. Bereits heruntergeladene Daten sind nicht widerrufbar. Bei neuen Welten standardmäßig AUS."
         options:
+          globalRiskAcknowledged:
+            name: "Mir ist klar: GLOBAL betrifft alle Teams"
+            description: "Pflichtbestätigung zum serverweiten Aktivieren von GLOBAL. TEAM-Freigabe bleibt unabhängig."
           allowTeam:
             name: "Teamkarten erlauben"
             description: "Neue Übertragungen für Teamkarten sofort sperren oder erlauben. Erneute Verbindung empfohlen."
           allowGlobal:
             name: "Globale Karten erlauben"
-            description: "Neue Übertragungen für globale Karten sofort sperren oder erlauben. Erneute Verbindung empfohlen."
+            description: "HOHES PvP-RISIKO: Gibt Karten für ALLE Teams frei. Standardmäßig AUS. Deaktivierung stoppt neue Transfers, löscht aber keine fremden Xaero-Caches."
           allowUploads:
             name: "Uploads erlauben"
             description: "Sperrt oder erlaubt neue Karten-Uploads, ohne gespeicherte Karten zu löschen"

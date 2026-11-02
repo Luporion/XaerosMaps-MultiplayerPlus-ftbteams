@@ -88,7 +88,8 @@ class MapSyncSession(
 
     fun diagnostics(): String =
         "Scopes: ${activeScopes.size} | Native tiles: ${nativeTileWrites.get()} | " +
-        "Received tiles: ${receivedTiles.get()} | Received KB: ${receivedBytes.get() / 1024L}"
+        "Received tiles: ${receivedTiles.get()} | Received KB: ${receivedBytes.get() / 1024L} | " +
+        downloader.diagnostics()
 
     private val uploaderTickJob = ExclusiveJob {
         syncScope.launch {
@@ -106,6 +107,7 @@ class MapSyncSession(
         "private-${net.minecraft.client.Minecraft.getInstance().player?.uuid ?: "none"}"
     }
     fun resetGeneration() {
+        downloader.reset()
         activeScopes.clear()
         layerData.values.forEach { it.appliedRevisions.clear();it.latestRevisions.clear() }
     }
@@ -133,6 +135,7 @@ class MapSyncSession(
         // Fail closed on corruption rather than silently losing personal provenance.
         personalJournal=PersonalExplorationJournal.open(base.resolve("personal-provenance-v3.bin"))
 
+        syncScope.launch { downloader.runRetryLoop() }
         syncScope.launch {
             while (isActive) {
                 layerData.values.forEach { it.cursorStores.values.forEach { store -> store.flush() } }
@@ -321,6 +324,7 @@ class MapSyncSession(
             if (layerData.failedRegions.remove(scopeId to regionPos)) return@launch
 
             layerData.cursorStores[scopeId]?.setCursor(regionPos, revision)
+            downloader.onRegionCompleted(layer, scopeId, regionPos, revision)
         }
     }
 

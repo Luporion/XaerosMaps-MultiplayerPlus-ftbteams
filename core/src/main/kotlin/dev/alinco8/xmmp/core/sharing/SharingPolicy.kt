@@ -29,22 +29,20 @@ object SharingPolicy {
      *  team/global published terrain without granting uploads to those scopes.
      *  Publishing still uses exactly one chosen scope (plus private copy).
      */
-    fun readableScopes(identity: SharingIdentity, mode: SharingMode): List<String> {
-        val mine = "private-${identity.playerId}"
-        if (mode == SharingMode.PRIVATE) return listOf(mine)
-        val team = identity.partyTeamId?.let { "team-$it" }
-        // Never infer a party from a client-supplied ID.
-        return listOfNotNull(mine, team, "global").distinct()
-    }
+    @Deprecated("Use explicit receiveTeam/receiveGlobal; safe legacy callers see only private terrain")
+    fun readableScopes(identity: SharingIdentity, mode: SharingMode): List<String> =
+        listOf("private-${identity.playerId}")
 
+    @Deprecated("Use explicit subscriptions; the legacy overload has no sharing privileges")
     fun canReceive(identity: SharingIdentity, mode: SharingMode, scopeId: String): Boolean =
-        scopeId in readableScopes(identity, mode)
+        scopeId == "private-${identity.playerId}"
 
     /** Receive preferences never grant a foreign private scope or a foreign FTB party. */
     fun readableScopes(identity: SharingIdentity, mode: SharingMode,
                        receiveTeam: Boolean, receiveGlobal: Boolean): List<String> {
         val own = "private-${identity.playerId}"
-        if (mode == SharingMode.PRIVATE) return listOf(own)
+        // PRIVATE publication may still subscribe to authorized team/global data.
+        // Never interpret receiving terrain as consent to publish it.
         val team = if (receiveTeam) identity.partyTeamId?.let { "team-$it" } else null
         return listOfNotNull(own, team, if (receiveGlobal) "global" else null)
     }

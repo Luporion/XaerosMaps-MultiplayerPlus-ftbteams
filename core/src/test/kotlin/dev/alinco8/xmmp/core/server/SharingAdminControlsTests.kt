@@ -11,7 +11,7 @@ fun runSharingAdminControlsChecks() {
         check(controls.settings == SharingAdminSettings())
         check(controls.allows("private-user"))
         check(controls.allows("team-abc"))
-        check(controls.allows("global"))
+        check(!controls.allows("global")) // safe global default in new worlds
         controls.change(SharingAdminSettings(false, true, false))
         check(!controls.allows("team-abc"))
         check(controls.allows("global"))

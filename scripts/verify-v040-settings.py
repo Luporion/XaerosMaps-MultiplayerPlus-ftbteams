@@ -12,7 +12,7 @@ c=read('src/main/kotlin/dev/alinco8/xmmp/client/ClientSession.kt')
 assert 'host.isMapAdministrator(playerId)' in a
 assert 'if (!terrainTransportEnabled || !host.isMapAdministrator(playerId)) return' in a
 assert 'state.receiveTeam=packet.receiveTeam' in a and 'state.receiveGlobal=packet.receiveGlobal' in a
-assert 'SharingPolicy.canReceive(identity, state.sharingMode, claimed,' in a
+assert 'SharingPolicy.canReceive(' in a
 assert 'filter(adminControls::allows)' in a
 assert 'adminControls.settings.allowUploads' in a
 assert 'StandardCopyOption.ATOMIC_MOVE' in s
@@ -23,8 +23,8 @@ assert 'onSharingPreferencesSaved()' in c
 assert 'syncDiagnostics()' in c
 assert 'CyclingListControllerBuilder.create(option)' in u
 assert 'status?.admin == true' in u
-assert 'PACKET_VERSION = "7"' in read('src/main/kotlin/dev/alinco8/xmmp/XMMP.kt')
-assert 'version=0.4.0' in read('gradle.properties')
+assert 'PACKET_VERSION = "8"' in read('src/main/kotlin/dev/alinco8/xmmp/XMMP.kt')
+assert 'version=0.4.2' in read('gradle.properties')
 assert 'runSharingAdminControlsChecks()' in read('core/src/test/kotlin/dev/alinco8/xmmp/core/server/SharingAdminControlsGradleTest.kt')
 assert 'de_de.yml' in '\n'.join(str(x.name) for x in (r/'src/main/resources/assets/xmmp/lang').glob('*.yml'))
 print('XMMP v0.4.0 YACL, admin authorization, ACL, persistence and status checks OK')

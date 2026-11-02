@@ -1,0 +1,17 @@
+XMMP 0.4.2 – combined 0.4.1 GLOBAL warning + 0.4.2 sync fix
+
+BASE: clean feat/v0.4.0-ingame-ui, commit 5207ae8f (includes v0.3 JUnit hotfix).
+Do NOT apply this patch over v0.4.1: the v0.4.1 changes are included.
+
+Copy XMMP_FTBTeams_v0.4.2.patch to M:\Downloads, then:
+
+cd E:\Entwicklung\XaerosMaps-MultiplayerPlus-ftbteams
+git switch feat/v0.4.0-ingame-ui
+git status --short
+git switch -c feat/v0.4.2-sync-diagnostics
+.\PATCH.cmd "M:\Downloads\XMMP_FTBTeams_v0.4.2.patch"
+
+Watch NeoForge CI with the included monitor. Only when CI is green, replace
+all older XMMP jars on CLIENTS and DEV SERVER with the resulting v0.4.2 jar.
+A green CI run does not confirm successful in-game sharing, rendering or TPS.
+Do not deploy on production until the dedicated two-party privacy test passes.

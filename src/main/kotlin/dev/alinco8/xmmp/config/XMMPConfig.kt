@@ -29,14 +29,14 @@ class XMMPConfig {
     @SerialEntry(comment = "Max chunk downloads to have in flight at once (the server may cap this)")
     var downloadWindow = 128
 
-    @SerialEntry(comment = "Terrain publication / subscription scope: PRIVATE, TEAM (FTB party), GLOBAL. Set before joining. Default PRIVATE; PRIVATE receives own; TEAM/GLOBAL also receive authorized team and global scopes; reconnect after changing.")
+    @SerialEntry(comment = "Only where your OWN exploration is published: PRIVATE, TEAM (FTB party), GLOBAL. Reception is independent and requires the toggles below.")
     var terrainSharingMode = "PRIVATE"
 
-    @SerialEntry(comment = "Subscribe to team terrain when sharing mode is TEAM or GLOBAL. Requires connection renegotiation.")
+    @SerialEntry(comment = "Download authorized team terrain even while publishing PRIVATE. Never uploads your map to others.")
     var receiveTeamTerrain = true
 
-    @SerialEntry(comment = "Subscribe to global terrain when sharing mode is TEAM or GLOBAL. Requires connection renegotiation.")
-    var receiveGlobalTerrain = true
+    @SerialEntry(comment = "Opt in to PUBLIC map downloads. This does not upload your map, but reveals other players' public exploration in PvP. Default OFF.")
+    var receiveGlobalTerrain = false
 
     @SerialEntry(comment = "World specific settings")
     var worlds = HashMap<String, WorldConfig>()

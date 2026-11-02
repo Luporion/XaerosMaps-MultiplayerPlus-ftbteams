@@ -28,7 +28,7 @@ object XMMPServer {
     }
 
     fun onServerStarted(server: MinecraftServer) {
-        XMMP.LOGGER.info("Rogler XMMP v0.4.0: authenticated scoped terrain sharing with server-authorized admin controls (DEV build)")
+        XMMP.LOGGER.info("Rogler XMMP v0.4.2: authenticated scoped terrain sharing with server-authorized admin controls (DEV build)")
         check(session == null) { "Session should be null when server starts" }
 
         session = ServerSession(

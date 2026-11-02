@@ -13,6 +13,12 @@ data class S2CSharingStatus(
     val allowTeam: Boolean,
     val allowGlobal: Boolean,
     val allowUploads: Boolean,
+    val uploadsStored: Long = 0,
+    val uploadsRejected: Long = 0,
+    val downloadPackets: Long = 0,
+    val downloadedBytes: Long = 0,
+    val regionRequests: Long = 0,
+    val regionThrottled: Long = 0,
 ) : XMMPPacket<S2CSharingStatus>(Companion) {
     companion object : Type<S2CSharingStatus>() {
         override val codec = XMMPStreamCodec.of(
@@ -20,7 +26,9 @@ data class S2CSharingStatus(
                 S2CSharingStatus(
                     XMMPStreamCodec.scopeId.decode(buf), XMMPStreamCodec.scopeId.decode(buf),
                     buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
-                    buf.readBoolean(), buf.readBoolean(), buf.readBoolean()
+                    buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
+                    buf.readLong(), buf.readLong(), buf.readLong(),
+                    buf.readLong(), buf.readLong(), buf.readLong()
                 )
             },
             { buf, p ->
@@ -32,6 +40,12 @@ data class S2CSharingStatus(
                 buf.writeBoolean(p.allowTeam)
                 buf.writeBoolean(p.allowGlobal)
                 buf.writeBoolean(p.allowUploads)
+                buf.writeLong(p.uploadsStored)
+                buf.writeLong(p.uploadsRejected)
+                buf.writeLong(p.downloadPackets)
+                buf.writeLong(p.downloadedBytes)
+                buf.writeLong(p.regionRequests)
+                buf.writeLong(p.regionThrottled)
             }
         )
     }

@@ -59,3 +59,15 @@
 - Verify 1.21.1 NeoForge CI, actual Xaero rendering and adversarial FTB teams
 - True client-side separate pixel-owned overlays and reliable cache revocation
 - Better diagnostic counters and integration tests with XaeroPlus, Rogler Core, cave layers
+
+## v0.4.2 – SHARING FIX + DIAGNOSTICS (source candidate)
+- [x] PvP GLOBAL warnings and two consent gates incorporated from v0.4.1.
+- [x] PRIVATE publication and TEAM/GLOBAL reception independently authorized.
+- [x] TEAM upload does not require TEAM download subscription.
+- [x] Retry of rate-limited region requests, scoped/deduplicated with backoff and bounded attempts/queue.
+- [x] Server counters and explicit YACL status rows for accepted/rejected uploads, sent tiles, rate-limited regions.
+- [x] Limited upload batch and non-main-thread tile-payload codec validation.
+- [ ] Full NeoForge CI build, runtime test and performance A/B measurement.
+- [ ] Old personal Xaero map safe first-import with proven provenance (not enabled).
+- [ ] Per-upload successful/rejected client ACK and re-upload after out-of-range rejection.
+- [ ] Separate client-side pixel overlays / cache revocation on party changes.
