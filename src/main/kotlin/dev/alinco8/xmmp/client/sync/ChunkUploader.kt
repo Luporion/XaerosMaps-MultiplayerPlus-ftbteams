@@ -1,9 +1,7 @@
 package dev.alinco8.xmmp.client.sync
 
 import dev.alinco8.xmmp.client.MapSyncContext
-import dev.alinco8.xmmp.client.XMMPClient
 import dev.alinco8.xmmp.core.ChunkKey
-import dev.alinco8.xmmp.client.network.minecraft.MinecraftPacketSender
 import dev.alinco8.xmmp.core.ResourceId
 import dev.alinco8.xmmp.core.SyncLayer
 import dev.alinco8.xmmp.core.network.packet.C2SChunkUpload
@@ -22,13 +20,23 @@ class ChunkUploader(
 
     private val pending = LinkedHashMap<ChunkKey, Pending>()
     private val sentHashes = HashMap<ChunkKey, Long>()
+    @Volatile
+    var generation = 0L
+        private set
+
+    @Synchronized
+    fun discardPending() {
+        generation++
+        pending.clear()
+        sentHashes.clear()
+    }
 
     @Synchronized
     fun pendingCount() = pending.size
 
     @Synchronized
-    private fun markSent(key: ChunkKey, hash: Long) {
-        sentHashes[key] = hash
+    private fun markSent(key: ChunkKey, hash: Long, uploadGeneration: Long) {
+        if (generation == uploadGeneration) sentHashes[key] = hash
     }
 
     @Synchronized
@@ -37,14 +45,16 @@ class ChunkUploader(
         val e = pending.entries.first()
         val key = e.key
         val hash = e.value.hash
-        val seq = flow.tryAcquire { markSent(key, hash) } ?: return null
+        val uploadGeneration = generation
+        val seq = flow.tryAcquire { markSent(key, hash, uploadGeneration) } ?: return null
         pending.remove(key)
 
         return Triple(seq, key, e.value.payload)
     }
 
     @Synchronized
-    fun offer(key: ChunkKey, payload: ByteArray, hash: Long) {
+    fun offer(key: ChunkKey, payload: ByteArray, hash: Long, observedGeneration: Long) {
+        if (observedGeneration != generation) return
         if (sentHashes[key] == hash) {
             pending.remove(key)
             return

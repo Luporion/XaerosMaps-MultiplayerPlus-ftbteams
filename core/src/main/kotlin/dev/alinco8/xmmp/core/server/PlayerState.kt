@@ -6,6 +6,8 @@ import dev.alinco8.xmmp.core.SyncLayer
 import dev.alinco8.xmmp.core.config.ServerConfig
 import dev.alinco8.xmmp.core.network.CreditWindow
 import dev.alinco8.xmmp.core.network.TokenBucket
+import dev.alinco8.xmmp.core.network.packet.S2CSharingStatus
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -23,6 +25,8 @@ class PlayerState(
         val chunkPos: ChunkKey,
         val seq: Long,
         val payload: ByteArray,
+        val publishScope: String,
+        val syncId: Int,
     )
 
     val uploadLimiter =
@@ -59,6 +63,8 @@ class PlayerState(
     @Volatile var receiveGlobal: Boolean = true
     @Volatile var handshakeComplete: Boolean = false
 
+    var lastSharingStatus: S2CSharingStatus? = null
+    var indexJob: Job? = null
     var syncId = -1
     var handshakeSent = false
     var syncedDimension: ResourceId? = null

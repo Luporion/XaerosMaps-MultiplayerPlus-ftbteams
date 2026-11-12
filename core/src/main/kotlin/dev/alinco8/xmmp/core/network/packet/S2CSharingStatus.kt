@@ -20,6 +20,11 @@ data class S2CSharingStatus(
     val regionRequests: Long = 0,
     val regionThrottled: Long = 0,
 ) : XMMPPacket<S2CSharingStatus>(Companion) {
+    /** Ignore telemetry-only updates when deciding whether to reindex the map. */
+    fun sameScope(other: S2CSharingStatus): Boolean =
+        activePublishScope == other.activePublishScope && partyScope == other.partyScope &&
+            receiveTeam == other.receiveTeam && receiveGlobal == other.receiveGlobal
+
     companion object : Type<S2CSharingStatus>() {
         override val codec = XMMPStreamCodec.of(
             { buf ->

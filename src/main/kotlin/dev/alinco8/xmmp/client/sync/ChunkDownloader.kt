@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -45,9 +46,16 @@ class ChunkDownloader(
         cursorStore: CursorStore,
         scopeId: String,
         regionRevisions: Map<RegionKey, Long>,
+        isCurrentGeneration: () -> Boolean,
         onRequest: (RegionKey) -> Unit,
     ) {
+        if (!isCurrentGeneration()) return
+        var processed = 0
         for ((pos, remote) in regionRevisions) {
+            if (processed++ % 128 == 0) {
+                yield()
+                if (!isCurrentGeneration()) return
+            }
             var cursor = cursorStore.cursor(pos)
             if (remote < cursor) {
                 cursorStore.setCursor(pos, 0)

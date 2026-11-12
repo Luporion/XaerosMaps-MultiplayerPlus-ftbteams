@@ -1,7 +1,7 @@
-# Current XMMP fork state
+# Aktueller Stand des XMMP-Forks
 
-**v0.4.2 SOURCE CANDIDATE (2026-11-02).** Based on v0.4.0 CI-green commit `5207ae8f` (run `40609501149`), including v0.4.1 GLOBAL warnings, plus v0.4.2 publication/reception separation, region retry queue and server/client transfer diagnostics. v0.4.2 has not yet passed full NeoForge CI or Minecraft multiplayer tests.
+**v0.4.3** basiert auf v0.4.2 bei `36edbcbd`. Bei Team-/Freigabewechsel wird ein neuer Index angefordert. Die Abgleichgeneration bindet ausstehende Transfers und die Indexverarbeitung ist begrenzt. Rogler Core v0.9.0 kann den XMMP-Status im Control Center anzeigen.
 
-Protocol **8** requires the same version on the dedicated NeoForge server and each client. GLOBAL is disabled by default on freshly configured servers, and receiving GLOBAL stays off by default. No safe old-map import, pixel-level cache revocation or 8–12-player load certification yet.
+Protokoll **8**. Mehrspielerabnahme, widerrufbare Darstellung bereits gespeicherter fremder Kacheln und vergleichbare Lastmessung stehen aus.
 
-See [v0.4.2 release](RELEASE_v0.4.2.md), [roadmap](ROADMAP.md) and [test matrix](TEST_MATRIX.md).
+[Release v0.4.3](RELEASE_v0.4.3.md) · [Roadmap](ROADMAP.md) · [Testmatrix](TEST_MATRIX.md)

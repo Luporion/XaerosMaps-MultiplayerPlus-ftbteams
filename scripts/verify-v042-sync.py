@@ -19,5 +19,5 @@ assert 'state.uploadsStored.incrementAndGet()' in s
 assert 'playerState.regionThrottled.incrementAndGet()' in s
 assert 'downloadPackets.get()' in s and 'sendSharingStatus(id, state)' in s
 assert 'PACKET_VERSION = "8"' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/XMMPShared.kt')
-assert 'version=0.4.2' in read('gradle.properties')
+assert 'version=0.4.3' in read('gradle.properties')
 print('XMMP v0.4.2 publication/reception, retry, diagnostics source contract OK')

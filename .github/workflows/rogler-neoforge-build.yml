@@ -1,4 +1,4 @@
-name: Rogler XMMP v0.4.2 NeoForge Build
+name: Rogler XMMP v0.4.3 NeoForge Build
 on:
   push:
     branches: [main, 'feat/**']
@@ -40,10 +40,10 @@ jobs:
         run: python3 scripts/verify-test-discovery.py
       # Both suites must actually execute; Gradle 9 fails if no tests are discovered.
       - name: Build Minecraft 1.21.1 NeoForge and run JUnit tests
-        run: ./gradlew :1.21.1-neoforge:build :core:test --no-parallel --no-daemon
+        run: ./gradlew :1.21.1-neoforge:build :core:test --configure-on-demand --no-configuration-cache --no-parallel --no-daemon
       - name: Upload DEV source-tested JAR
         uses: actions/upload-artifact@v4
         with:
-          name: rogler-xmmp-0.4.2-unverified-runtime
+          name: rogler-xmmp-0.4.3-unverified-runtime
           path: versions/1.21.1-neoforge/build/libs/*.jar
           if-no-files-found: error

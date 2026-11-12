@@ -19,13 +19,15 @@ class TickDispatcher : CoroutineDispatcher() {
         queue.add(block)
     }
 
-    fun pump() {
-        var remaining = queue.size
+    fun pump(maxTasks: Int = Int.MAX_VALUE, maxNanos: Long = Long.MAX_VALUE) {
+        val started = System.nanoTime()
+        var remaining = if (maxTasks == Int.MAX_VALUE) queue.size else maxTasks
 
         while (remaining-- > 0) {
             val task = queue.poll() ?: break
 
             task.run()
+            if (System.nanoTime() - started >= maxNanos) break
         }
     }
 

@@ -34,7 +34,7 @@ assert 'session.resetGeneration()' in c and 'onPersonalVisit(position.x,position
 assert 'private const val MAX_ENTRIES' in journal and 'ATOMIC_MOVE' in journal
 assert 'PACKET_VERSION = "8"' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/XMMPShared.kt')
 assert 'PACKET_VERSION = "8"' in read('src/main/kotlin/dev/alinco8/xmmp/XMMP.kt')
-assert 'version=0.4.2' in read('gradle.properties')
-assert 'version = "0.4.2"' in read('stonecutter.properties.toml')
+assert 'version=0.4.3' in read('gradle.properties')
+assert 'version = "0.4.3"' in read('stonecutter.properties.toml')
 assert 'hasAuthenticatedPlayers' in s
 print('XMMP v0.4.0 scope ACL / provenance / packet guards: source checks OK')

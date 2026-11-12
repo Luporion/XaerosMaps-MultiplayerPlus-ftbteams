@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.name
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 class ServerRegionStore(
@@ -19,6 +20,7 @@ class ServerRegionStore(
     private val regions = ConcurrentHashMap<RegionKey, RegionFile>()
 
     companion object {
+        private const val MAX_INDEX_REGIONS = 16_384
         const val FILE_EXT = "xmsr"
     }
 
@@ -47,29 +49,29 @@ class ServerRegionStore(
     private val fileNamePattern = Regex("""r\.(-?\d+)\.(-?\d+)\.$FILE_EXT""")
 
     suspend fun listRegionRevisions(): Map<RegionKey, Long> = withContext(Dispatchers.IO) {
-        val paths =
-            if (Files.exists(directory)) Files.list(directory).use { it.toList() }
-            else emptyList()
-
         buildMap {
-            for (path in paths) {
-                val match = fileNamePattern.matchEntire(path.name) ?: continue
-                val key = RegionKey(
-                    match.groupValues[1].toIntOrNull() ?: continue,
-                    match.groupValues[2].toIntOrNull() ?: continue,
-                )
-
-                val revision = try {
-                    regionReadonly(key)?.regionRevision()
-                } catch (e: IOException) {
-                    LOGGER.warn("Failed to read region revision for $path, skipping", e)
-                    continue
+            if (Files.exists(directory)) Files.list(directory).use { paths ->
+                val files = paths.iterator()
+                while (files.hasNext() && size < MAX_INDEX_REGIONS) {
+                    ensureActive()
+                    val path = files.next()
+                    val match = fileNamePattern.matchEntire(path.name) ?: continue
+                    val key = RegionKey(
+                        match.groupValues[1].toIntOrNull() ?: continue,
+                        match.groupValues[2].toIntOrNull() ?: continue,
+                    )
+                    val revision = try {
+                        regionReadonly(key)?.regionRevision()
+                    } catch (e: IOException) {
+                        LOGGER.warn("Failed to read region revision for $path, skipping", e)
+                        continue
+                    }
+                    if (revision != null) put(key, revision)
                 }
-
-                if (revision != null) put(key, revision)
             }
-
             for ((key, region) in regions) {
+                if (size >= MAX_INDEX_REGIONS) break
+                ensureActive()
                 if (key in this) continue
                 region.cachedRegionRevision()?.let { put(key, it) }
             }

@@ -71,3 +71,7 @@
 - [ ] Old personal Xaero map safe first-import with proven provenance (not enabled).
 - [ ] Per-upload successful/rejected client ACK and re-upload after out-of-range rejection.
 - [ ] Separate client-side pixel overlays / cache revocation on party changes.
+
+## v0.4.3 – Neuabgleich und Core-Integration
+
+Team- und Freigabeänderungen starten den Abgleich neu. Indexleser und Nachlieferung verwenden feste Arbeitsbudgets. Ausstehende Uploads sind an die beim Eingang geprüfte Freigabe gebunden. Zweiteam-Abnahme, Lastmessung und widerrufbare Darstellung bereits empfangener Kacheln bleiben offen. [Release v0.4.3](RELEASE_v0.4.3.md).

@@ -19,4 +19,4 @@ python scripts\verify-test-discovery.py
 if errorlevel 1 exit /b 1
 python scripts\test-build-monitor.py
 if errorlevel 1 exit /b 1
-echo v0.4.2 sync retry, ACL, diagnostics and PvP warning source checks OK. NeoForge build and multiplayer test remain required.
+echo v0.4.3 sync retry, ACL, diagnostics and PvP warning source checks OK. NeoForge build and multiplayer test remain required.

@@ -16,7 +16,7 @@ for name in ('en_us.yml','de_de.yml'):
     t=read('src/main/resources/assets/xmmp/lang/'+name)
     for token in ('globalRiskAcknowledged:', 'globalDanger:', 'irreversible:', 'warning:'):
         assert token in t, (name, token)
-assert 'version=0.4.2' in read('gradle.properties')
+assert 'version=0.4.3' in read('gradle.properties')
 assert 'fun publishingMode(' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/sharing/GlobalSharingConsent.kt')
 assert 'fun globalServerEnabled(' in read('core/src/main/kotlin/dev/alinco8/xmmp/core/sharing/GlobalSharingConsent.kt')
 print('XMMP v0.4.1 PvP/Fog-of-War warning + explicit GLOBAL consent source checks OK')

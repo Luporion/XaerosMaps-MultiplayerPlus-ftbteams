@@ -43,8 +43,7 @@ object ClientPacketHandlers {
         fromMinecraft: Boolean = true,
         isCurrentConnection: () -> Boolean = { true },
     ) {
-        // v7 scoped protocol only; trusted server permissions are enforced by ServerSession.
-        // Local client Xaero cache revocation is NOT available in v0.4.0.
+        // ServerSession verifies scoped terrain permissions. Already persisted Xaero tiles can remain visible.
         if (!SharingPolicy.TERRAIN_TRANSPORT_ENABLED) return
         val (handler, packet) = try {
             val id = buf.readId()
@@ -102,7 +101,11 @@ object ClientPacketHandlers {
     }
 
     fun handleSharingStatus(packet: S2CSharingStatus) {
+        val previous = XMMPClient.sharingStatus
         XMMPClient.sharingStatus = packet
+        if (previous != null && !packet.sameScope(previous)) {
+            XMMPClient.session?.onSharingScopeChanged()
+        }
     }
 
     fun handleRegionIndex(packet: S2CRegionIndex) {

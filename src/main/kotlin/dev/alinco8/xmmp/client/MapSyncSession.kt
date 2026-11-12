@@ -109,7 +109,13 @@ class MapSyncSession(
     fun resetGeneration() {
         downloader.reset()
         activeScopes.clear()
-        layerData.values.forEach { it.appliedRevisions.clear();it.latestRevisions.clear() }
+        layerData.values.forEach {
+            it.appliedRevisions.clear()
+            it.latestRevisions.clear()
+            it.failedRegions.clear()
+            it.writingJobs.clear()
+            it.uploader.discardPending()
+        }
     }
     private lateinit var personalJournal: PersonalExplorationJournal
     private var lastJournalFlushNanos = System.nanoTime()
@@ -167,6 +173,8 @@ class MapSyncSession(
         // Called only from native Xaero MapWriter; NOT our network writeTile().
         personalJournal.mark(layer.ordinal,x,z,PersonalExplorationJournal.NATIVE)
         nativeTileWrites.incrementAndGet()
+        val uploader = layerData.getValue(layer).uploader
+        val observedGeneration = uploader.generation
 
         syncScope.launch(Dispatchers.Default) {
             val buf = FriendlyByteBuf(Unpooled.buffer())
@@ -177,16 +185,13 @@ class MapSyncSession(
                 buf.release()
             }
 
-            layerData[layer]!!.uploader.offer(
-                ChunkKey(x, z),
-                payload,
-                PayloadHash.of(payload)
-            )
+            uploader.offer(ChunkKey(x, z), payload, PayloadHash.of(payload), observedGeneration)
         }
     }
 
     fun onRegionIndex(layer: SyncLayer, regionRevisions: Map<RegionKey, Long>, scopeId: String) {
         if (!dev.alinco8.xmmp.core.sharing.SharingPolicy.isValidScope(scopeId)) return
+        val generation = syncId
         // Multiple authorized scopes may be received together; revisions never cross scopes.
         activeScopes.add(scopeId)
         if (ctx.key.usingWorldSave) return
@@ -200,7 +205,8 @@ class MapSyncSession(
                 layer,
                 store,
                 scopeId,
-                regionRevisions
+                regionRevisions,
+                { generation == syncId && scopeId in activeScopes }
             ) { region ->
                 layerData.failedRegions.remove(scopeId to region)
             }
@@ -247,6 +253,7 @@ class MapSyncSession(
                         FriendlyByteBuf(Unpooled.wrappedBuffer(payload))
                     )
                 } ?: run {
+                    if (packetSyncId != syncId || scopeId !in activeScopes) return@launch
                     LOGGER.warn(
                         "Failed to decode tile for chunk {}:{}",
                         chunkPos.globalX,
@@ -292,6 +299,7 @@ class MapSyncSession(
                     return@launch
                 }
 
+                if (packetSyncId != syncId || scopeId !in activeScopes) return@launch
                 when (written) {
                     true -> {
                         receivedTiles.incrementAndGet()
@@ -303,7 +311,7 @@ class MapSyncSession(
                     false -> layerData.appliedRevisions.merge(cursorKey,revision,::maxOf)
                 }
             } finally {
-                layerData.latestRevisions.remove(cursorKey, revision)
+                if (packetSyncId == syncId) layerData.latestRevisions.remove(cursorKey, revision)
             }
         }
 
@@ -321,6 +329,7 @@ class MapSyncSession(
 
         syncScope.launch {
             jobs.joinAll()
+            if (syncId != this@MapSyncSession.syncId || scopeId !in activeScopes) return@launch
             if (layerData.failedRegions.remove(scopeId to regionPos)) return@launch
 
             layerData.cursorStores[scopeId]?.setCursor(regionPos, revision)

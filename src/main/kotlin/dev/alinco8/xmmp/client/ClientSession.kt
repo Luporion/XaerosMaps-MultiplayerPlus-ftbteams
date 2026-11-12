@@ -224,6 +224,12 @@ class ClientSession(val ctx: WorldContext) {
     /** Re-handshake first, then re-index. No server restart is required. */
     fun syncDiagnostics(): String = syncSession?.diagnostics() ?: "No active Xaero world map sync"
 
+    fun onSharingScopeChanged() {
+        // Keep old-dimension scopes invalid while Xaero is switching contexts.
+        val level = Minecraft.getInstance().level ?: return
+        syncSession?.takeIf { it.dimension == level.dimension() }?.let(::sendDimensionSync)
+    }
+
     fun onSharingPreferencesSaved() {
         onHandshake()
         syncSession?.let(::sendDimensionSync)

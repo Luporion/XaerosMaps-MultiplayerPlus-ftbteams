@@ -40,6 +40,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.yield
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 
 class ServerSession(
     private val serverConfig: ServerConfig,
@@ -61,7 +64,9 @@ class ServerSession(
     private val scope = CoroutineScope(dispatcher + rootJob)
 
     private val playerStates = ConcurrentHashMap<UUID, PlayerState>()
-    private var lastDiagnosticNanos = System.nanoTime()
+    private var lastScopeCheckNanos = System.nanoTime()
+    private var lastDiagnosticNanos = lastScopeCheckNanos
+    private val indexReaders = Semaphore(2)
     private data class StoreId(val scope: String, val dimension: ResourceId, val layer: SyncLayer)
     private val regionStores = ConcurrentHashMap<StoreId, ServerRegionStore>()
 
@@ -117,18 +122,30 @@ class ServerSession(
     private fun revokeStale(playerId: UUID, state: PlayerState): Boolean {
         if (validPublication(playerId,state)) return false
         state.activeScope=null
-        state.syncedDimension=null
-        state.outbound.clear()
+        invalidateDownload(state)
         return true
     }
 
+    private fun invalidateDownload(state: PlayerState) {
+        state.indexJob?.cancel()
+        state.indexJob = null
+        state.syncedDimension = null
+        state.outbound.clear()
+        state.downloadCredits.reset()
+    }
+
     fun onTickPost() {
-        dispatcher.pump()
-        // Low frequency; no disk IO, no map iteration beyond connected players.
+        dispatcher.pump(maxTasks = 128, maxNanos = 2_000_000L)
+        // Delivery still rechecks current ACLs. This poll triggers a fresh
+        // client index even when the player stays in the same dimension.
         val now = System.nanoTime()
-        if (now - lastDiagnosticNanos >= 20_000_000_000L) {
-            lastDiagnosticNanos = now
-            playerStates.forEach { (id, state) -> sendSharingStatus(id, state) }
+        if (now - lastScopeCheckNanos >= 1_000_000_000L) {
+            lastScopeCheckNanos = now
+            val telemetry = now - lastDiagnosticNanos >= 20_000_000_000L
+            if (telemetry) lastDiagnosticNanos = now
+            playerStates.forEach { (id, state) ->
+                sendSharingStatus(id, state, force = telemetry)
+            }
         }
     }
 
@@ -155,8 +172,7 @@ class ServerSession(
     ) {
         val state = playerStates[playerId] ?: return
 
-        state.syncedDimension = null
-        state.outbound.clear()
+        invalidateDownload(state)
     }
 
     fun onPlayerLeave(playerId: UUID) {
@@ -182,9 +198,7 @@ class ServerSession(
         val requestedMode=SharingPolicy.resolveMode(packet.sharingMode)
             ?: run { host.disconnectPlayer(playerId,"Invalid map sharing mode"); return }
         // Handshake renegotiation must never leave queued content from an old scope.
-        state.outbound.clear()
-        state.downloadCredits.reset()
-        state.syncedDimension=null
+        invalidateDownload(state)
         state.syncId=-1
         state.sharingMode=requestedMode
         state.receiveTeam=packet.receiveTeam
@@ -210,29 +224,33 @@ class ServerSession(
             LOGGER.error("Failed to save server sharing controls", e)
             return
         }
-        for ((id, state) in playerStates) {
-            state.outbound.clear()
-            state.downloadCredits.reset()
-            state.syncedDimension=null
-            state.activeScope=effectiveScope(id,state)
-            sendSharingStatus(id,state)
-        }
+        for ((id, state) in playerStates) sendSharingStatus(id, state)
     }
 
-    private fun sendSharingStatus(playerId: UUID, state: PlayerState) {
+    private fun sendSharingStatus(playerId: UUID, state: PlayerState, force: Boolean = true) {
         if (!state.handshakeComplete) return
-        val team=host.getPartyTeamId(playerId)?.let { "team-$it" } ?: ""
-        val current=adminControls.settings
-        host.sendToPlayer(playerId, S2CSharingStatus(
-            effectiveScope(playerId,state) ?: "",team,
-            state.receiveTeam && current.allowTeam && state.sharingMode != SharingMode.PRIVATE,
-            state.receiveGlobal && current.allowGlobal && state.sharingMode != SharingMode.PRIVATE,
+        val partyId = host.getPartyTeamId(playerId)
+        val identity = SharingIdentity(playerId, partyId)
+        val current = adminControls.settings
+        val publish = SharingPolicy.scope(identity, state.sharingMode)
+            ?.takeIf(adminControls::allows) ?: "private-$playerId"
+        val status = S2CSharingStatus(
+            publish, partyId?.let { "team-$it" } ?: "",
+            partyId != null && state.receiveTeam && current.allowTeam,
+            state.receiveGlobal && current.allowGlobal,
             host.isMapAdministrator(playerId), current.allowTeam,
             current.allowGlobal, current.allowUploads,
             state.uploadsStored.get(), state.uploadsRejected.get(),
             state.downloadPackets.get(), state.downloadedBytes.get(),
             state.regionRequests.get(), state.regionThrottled.get()
-        ))
+        )
+        val previous = state.lastSharingStatus
+        val scopeChanged = previous != null && !status.sameScope(previous)
+        if (scopeChanged) invalidateDownload(state)
+        state.activeScope = publish
+        if (force || scopeChanged || previous == null) {
+            if (host.sendToPlayer(playerId, status)) state.lastSharingStatus = status
+        }
     }
 
     fun onDimensionSync(playerId: UUID, syncId: Int) {
@@ -243,13 +261,13 @@ class ServerSession(
         val scopeId=effectiveScope(playerId,playerState) ?: return
         playerState.activeScope=scopeId
 
-        playerState.outbound.clear()
-        playerState.downloadCredits.reset()
+        invalidateDownload(playerState)
         playerState.syncedDimension = dimension
         playerState.syncId = syncId
         playerState.outbound.signal()
 
-        playerState.scope.launch {
+        if (!playerState.enableWorldMapSync) return
+        playerState.indexJob = playerState.scope.launch {
             val syncCaves = serverConfig.shared.syncCaves
             // PRIVATE first, then TEAM, then GLOBAL. Each source has its own
             // revision cursor, and every outgoing chunk is scope-tagged.
@@ -259,13 +277,13 @@ class ServerSession(
                 for (layer in SyncLayer.entries) {
                     if (!syncCaves && layer == SyncLayer.FULL_CAVE) continue
                     if (!validScope(playerId,playerState,readScope) || playerState.syncId!=syncId) return@launch
-                    host.sendToPlayer(playerId,S2CRegionIndex(
-                        dimension,layer,
-                        getRegionStore(readScope,dimension,layer).listRegionRevisions()
-                            .entries.sortedWith(compareBy<Map.Entry<RegionKey, Long>>({ it.key.x }, { it.key.z }))
-                            .take(16_384).associate { it.toPair() },
-                        readScope
-                    ))
+                    val revisions = indexReaders.withPermit {
+                        getRegionStore(readScope, dimension, layer).listRegionRevisions()
+                    }
+                    // The disk scan suspends. Validate again after it finishes.
+                    if (!validScope(playerId, playerState, readScope) || playerState.syncId != syncId) return@launch
+                    host.sendToPlayer(playerId, S2CRegionIndex(dimension, layer, revisions, readScope))
+                    yield()
                 }
             }
         }
@@ -292,9 +310,12 @@ class ServerSession(
         }
 
         val state = playerStates[playerId] ?: return
-        if (!validPublication(playerId,state)) {
+        val publishScope = state.activeScope
+        if (publishScope == null || !validPublication(playerId,state)) {
             state.uploadsRejected.incrementAndGet()
-            revokeStale(playerId,state); return
+            host.sendToPlayer(playerId, S2CUploadAck(packet.seq))
+            revokeStale(playerId,state)
+            return
         }
         // A payload is untrusted even when its codec parses. Bound bytes and observed position.
         if (packet.payload.size !in 1..262_144 || !host.canObserveChunk(playerId,packet.chunkPos)) {
@@ -312,7 +333,9 @@ class ServerSession(
             packet.layer,
             packet.chunkPos,
             packet.seq,
-            packet.payload
+            packet.payload,
+            publishScope,
+            state.syncId
         )
         if (state.uploads.trySend(upload).isFailure) {
             LOGGER.warn(
@@ -350,8 +373,9 @@ class ServerSession(
                         state.uploadsRejected.incrementAndGet(); continue
                     }
                     val dimension = upload.dimension
-                    val scopeId=state.activeScope ?: continue
-                    if (!validPublication(uploaderId,state) ||
+                    val scopeId=upload.publishScope
+                    if (upload.syncId != state.syncId || scopeId != state.activeScope ||
+                        !validPublication(uploaderId,state) ||
                         host.getDimension(uploaderId)!=upload.dimension ||
                         !host.canObserveChunk(uploaderId,upload.chunkPos)) {
                         state.uploadsRejected.incrementAndGet()
@@ -360,9 +384,13 @@ class ServerSession(
                     // Each explorer permanently keeps a private copy in addition to any share.
                     val privateScope="private-$uploaderId"
                     getRegionStore(privateScope,dimension,upload.layer).writeChunk(upload.chunkPos,upload.payload)
-                    if (scopeId!=privateScope)
-                        getRegionStore(scopeId,dimension,upload.layer).writeChunk(upload.chunkPos,upload.payload)
                     state.uploadsStored.incrementAndGet()
+                    if (scopeId != privateScope) {
+                        // Private I/O may suspend. Never route queued pixels under a new team's scope.
+                        if (upload.syncId != state.syncId || scopeId != state.activeScope ||
+                            !adminControls.settings.allowUploads || !validPublication(uploaderId,state)) continue
+                        getRegionStore(scopeId,dimension,upload.layer).writeChunk(upload.chunkPos,upload.payload)
+                    }
                     for (playerId in host.listPlayers()) {
                         if (playerId==uploaderId) continue
                         val receiver=playerStates[playerId] ?: continue
@@ -493,6 +521,10 @@ class ServerSession(
             val snapshot = file.regionRevision() ?: return@launch
 
             for (chunkX in 0 until 32) {
+                if (chunkX > 0 && chunkX % 2 == 0) {
+                    yield()
+                    if (playerState.syncId != syncId || !validScope(playerId, playerState, scopeId)) return@launch
+                }
                 for (chunkZ in 0 until 32) {
                     val revision = file.chunkRevision(chunkX, chunkZ) ?: continue
                     if (revision <= cursor) continue

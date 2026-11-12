@@ -24,7 +24,7 @@ assert 'syncDiagnostics()' in c
 assert 'CyclingListControllerBuilder.create(option)' in u
 assert 'status?.admin == true' in u
 assert 'PACKET_VERSION = "8"' in read('src/main/kotlin/dev/alinco8/xmmp/XMMP.kt')
-assert 'version=0.4.2' in read('gradle.properties')
+assert 'version=0.4.3' in read('gradle.properties')
 assert 'runSharingAdminControlsChecks()' in read('core/src/test/kotlin/dev/alinco8/xmmp/core/server/SharingAdminControlsGradleTest.kt')
 assert 'de_de.yml' in '\n'.join(str(x.name) for x in (r/'src/main/resources/assets/xmmp/lang').glob('*.yml'))
 print('XMMP v0.4.0 YACL, admin authorization, ACL, persistence and status checks OK')
